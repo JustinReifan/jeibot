@@ -1,13 +1,14 @@
 {
-    "wait": "*Utiwii*",
-    "error": {
-        "Iv": "Link yang kamu berikan tidak valid",
-        "api": "Ups, terjadi kesalahan pada apikey, silahkan hubungi owner untuk memperbaikinya"
-    },
-    "OnlyGrup": "Perintah ini hanya bisa digunakan di grup",
-    "OnlyPM": "Perintah ini hanya bisa digunakan di private message",
-    "GrupAdmin": "Perintah ini hanya bisa digunakan oleh Admin Grup",
-    "BotAdmin": "Bot Harus menjadi admin",
-    "OnlyOwner": "Perintah ini hanya dapat digunakan oleh owner bot",
-    "OnlyPrem": "Perintah ini khusus member premium"
+  "wait": "*Utiwii*",
+  "error": {
+    "Iv": "Link yang kamu berikan tidak valid",
+    "api": "Ups, terjadi kesalahan pada apikey, silahkan hubungi owner untuk memperbaikinya"
+  },
+  "OnlyGrup": "Perintah ini hanya bisa digunakan di grup",
+  "OnlyGrupCTA": "Perintah ini hanya bisa dilakukan di grup, silahkan sewa bot atau join grup jei bot: linktr.ee/jeibot",
+  "OnlyPM": "Perintah ini hanya bisa digunakan di private message",
+  "GrupAdmin": "Perintah ini hanya bisa digunakan oleh Admin Grup",
+  "BotAdmin": "Bot Harus menjadi admin",
+  "OnlyOwner": "Perintah ini hanya dapat digunakan oleh owner bot",
+  "OnlyPrem": "Perintah ini khusus member premium"
 }

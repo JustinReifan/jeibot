@@ -1,5 +1,8 @@
 {
-  "ownerNumber": ["6281932888380@s.whatsapp.net"],
+  "ownerNumber": [
+    "6285931018333@s.whatsapp.net",
+    "6285931018333@s.whatsapp.net"
+  ],
   "ownerName": "Justin",
   "instagram": "https://linktr.ee/jeibot",
   "gcwa": "https://chat.whatsapp.com/DeUaRE4w5OKHRsp3BNG1sb",
@@ -12,7 +15,7 @@
   "fotoDonasi": "./dana.jpg",
   "saweria": "https://saweria.co/",
   "trakteer": "https://trakteer.id/",
-  "pathimg": "https://i.ibb.co/k6pqXyJ/Whats-App-Image-2023-11-17-at-19-32-12.jpg",
+  "pathimg": "linktr.ee/jeibot",
   "gifmenu": "https://telegra.ph/file/191c85e536ed045570a63.mp4",
   "BotKey": "junaa",
   "ZenzKey": "zenzkey_7fc49f657e25",
@@ -34,5 +37,13 @@
   "gcount": {
     "prem": 1000,
     "user": 8
-  }
+  },
+
+  "TINPED_API_ID": "8186",
+  "TINPED_API_KEY": "p070t31U0he3DdhqY7kh6z3J6dFRFyMwk3Z",
+  "DUITKU_MERCHANT_CODE": "DS23960",
+  "DUITKU_API_KEY": "27c8319a41b290f9837cc5cb4288f106",
+  "DUITKU_PRODUCTION": false,
+  "APP_CALLBACK_URL": "",
+  "APP_RETURN_URL": ""
 }

@@ -16,9 +16,12 @@ const {
   areJidsSameUser,
   getContentType,
   delay,
-} = require("@adiwajshing/baileys");
+  downloadMediaMessage,
+  jidNormalizedUser,
+} = require("@whiskeysockets/baileys");
 
 const fs = require("fs");
+const https = require("https");
 const fetch = (...args) =>
   import("node-fetch").then(({ default: fetch }) => fetch(...args));
 const util = require("util");
@@ -33,6 +36,8 @@ const moment = require("moment-timezone");
 const speed = require("performance-now");
 const { sizeFormatter } = require("human-readable");
 const { ttdl } = require("ruhend-scraper");
+const CONFIG = require("./config.json");
+const QRCode = require("qrcode");
 
 let format = sizeFormatter({
   std: "JEDEC", // 'SI' (default) | 'IEC' | 'JEDEC'
@@ -115,6 +120,11 @@ const {
   getGroupAdmins,
 } = require("./lib/myfunc");
 
+const {
+  createImage,
+  checkStatusAndGetImage,
+} = require("./lib/imagegenerator.js");
+
 const { TelegraPh } = require("./lib/uploader");
 const { quote } = require("./lib/quote");
 const { pinterest } = require("./lib/scraper");
@@ -142,7 +152,6 @@ let db_respon_list = JSON.parse(
 let sewa = JSON.parse(fs.readFileSync("./database/sewa.json"));
 let opengc = JSON.parse(fs.readFileSync("./database/opengc.json"));
 let closegc = JSON.parse(fs.readFileSync("./database/closegc.json"));
-let _nsfw = JSON.parse(fs.readFileSync("./database/nsfw.json"));
 let pendaftar = JSON.parse(fs.readFileSync("./database/user.json"));
 let mess = JSON.parse(fs.readFileSync("./mess.json"));
 let premium = JSON.parse(fs.readFileSync("./database/premium.json"));
@@ -695,6 +704,8 @@ module.exports = juna = async (
         body.toLowerCase(),
         db_respon_list
       );
+      // console.log(get_data_respon);
+
       if (get_data_respon.isImage === false) {
         juna.sendMessage(
           m.chat,
@@ -704,16 +715,10 @@ module.exports = juna = async (
           }
         );
       } else {
-        juna.sendMessage(
-          m.chat,
-          {
-            image: await getBuffer(get_data_respon.image_url),
-            caption: get_data_respon.response,
-          },
-          {
-            quoted: m,
-          }
-        );
+        const imageUrl = get_data_respon.image_url;
+        const caption = get_data_respon.response;
+
+        juna.sendFileUrl(m.chat, imageUrl, caption, m);
       }
     }
 
@@ -932,24 +937,17 @@ module.exports = juna = async (
       return result.toLowerCase();
     }
     async function newReply(teks) {
-      const nedd = {
-        contextInfo: {
-          mentionedJid: [m.sender],
-          externalAdReply: {
-            showAdAttribution: true,
-            title: ucapanWaktu,
-            body: `${pushname}`,
-            previewType: "PHOTO",
-            thumbnailUrl: pathimg,
-            sourceUrl: instagram,
-          },
-        },
-        text: teks,
-      };
-      return juna.sendMessage(m.chat, nedd, {
-        quoted: m,
-      });
+      const msg = { text: teks };
+
+      // kalau grup → kirim simple text aja
+      if (m.chat.endsWith("@g.us")) {
+        return juna.sendMessage(m.chat, msg);
+      }
+
+      // kalau private → boleh pakai quoted atau contextInfo
+      return juna.sendMessage(m.chat, msg, { quoted: m });
     }
+
     const junaa = {
       key: {
         fromMe: [],
@@ -1024,16 +1022,6 @@ module.exports = juna = async (
                 isPremium,
                 prefix
               ),
-              contextInfo: {
-                externalAdReply: {
-                  title: `Halo ${pushname} Selamat ${ucapanWaktu}`,
-                  body: "𝙅𝙖𝙣𝙜𝙖𝙣 𝙨𝙥𝙖𝙢 𝙗𝙤𝙩 𝙮𝙖𝙝𝙝",
-                  thumbnailUrl: pathimg,
-                  sourceUrl: gcwa,
-                  mediaType: 1,
-                  renderLargerThumbnail: true,
-                },
-              },
             },
             { quoted: m }
           );
@@ -1061,16 +1049,6 @@ module.exports = juna = async (
                 isPremium,
                 prefix
               ),
-              contextInfo: {
-                externalAdReply: {
-                  title: `Halo ${pushname} Selamat ${ucapanWaktu}`,
-                  body: "𝙅𝙖𝙣𝙜𝙖𝙣 𝙨𝙥𝙖𝙢 𝙗𝙤𝙩 𝙮𝙖𝙝𝙝",
-                  thumbnailUrl: pathimg,
-                  sourceUrl: gcwa,
-                  mediaType: 1,
-                  renderLargerThumbnail: true,
-                },
-              },
             },
             { quoted: m }
           );
@@ -1098,16 +1076,6 @@ module.exports = juna = async (
                 isPremium,
                 prefix
               ),
-              contextInfo: {
-                externalAdReply: {
-                  title: `Halo ${pushname} Selamat ${ucapanWaktu}`,
-                  body: "𝙅𝙖𝙣𝙜𝙖𝙣 𝙨𝙥𝙖𝙢 𝙗𝙤𝙩 𝙮𝙖𝙝𝙝",
-                  thumbnailUrl: pathimg,
-                  sourceUrl: gcwa,
-                  mediaType: 1,
-                  renderLargerThumbnail: true,
-                },
-              },
             },
             { quoted: m }
           );
@@ -1135,16 +1103,6 @@ module.exports = juna = async (
                 isPremium,
                 prefix
               ),
-              contextInfo: {
-                externalAdReply: {
-                  title: `Halo ${pushname} Selamat ${ucapanWaktu}`,
-                  body: "𝙅𝙖𝙣𝙜𝙖𝙣 𝙨𝙥𝙖𝙢 𝙗𝙤𝙩 𝙮𝙖𝙝𝙝",
-                  thumbnailUrl: pathimg,
-                  sourceUrl: gcwa,
-                  mediaType: 1,
-                  renderLargerThumbnail: true,
-                },
-              },
             },
             { quoted: m }
           );
@@ -1172,16 +1130,6 @@ module.exports = juna = async (
                 isPremium,
                 prefix
               ),
-              contextInfo: {
-                externalAdReply: {
-                  title: `Halo ${pushname} Selamat ${ucapanWaktu}`,
-                  body: "𝙅𝙖𝙣𝙜𝙖𝙣 𝙨𝙥𝙖𝙢 𝙗𝙤𝙩 𝙮𝙖𝙝𝙝",
-                  thumbnailUrl: pathimg,
-                  sourceUrl: gcwa,
-                  mediaType: 1,
-                  renderLargerThumbnail: true,
-                },
-              },
             },
             { quoted: m }
           );
@@ -1210,16 +1158,6 @@ module.exports = juna = async (
                 isPremium,
                 prefix
               ),
-              contextInfo: {
-                externalAdReply: {
-                  title: `Halo ${pushname} Selamat ${ucapanWaktu}`,
-                  body: "𝙅𝙖𝙣𝙜𝙖𝙣 𝙨𝙥𝙖𝙢 𝙗𝙤𝙩 𝙮𝙖𝙝𝙝",
-                  thumbnailUrl: pathimg,
-                  sourceUrl: gcwa,
-                  mediaType: 1,
-                  renderLargerThumbnail: true,
-                },
-              },
             },
             { quoted: m }
           );
@@ -1321,7 +1259,7 @@ module.exports = juna = async (
       case "hdr":
         {
           if (isBan) return newReply("Lu di ban kocak awokwok");
-
+          if (!m.isGroup) return newReply(mess.OnlyGrupCTA);
           if (!quoted) return newReply(`Fotonya Mana?`);
           if (!/image/.test(mime))
             return newReply(
@@ -1345,7 +1283,7 @@ module.exports = juna = async (
       case "qc":
         {
           if (isBan) return newReply("Lu di ban kocak awokwok");
-
+          if (!m.isGroup) return newReply(mess.OnlyGrupCTA);
           if (!text) return newReply("Masukkan Teks");
           let ppnyauser = await await juna
             .profilePictureUrl(m.sender, "image")
@@ -1369,7 +1307,7 @@ module.exports = juna = async (
       case "sgif":
         {
           if (isBan) return newReply("Lu di ban kocak awokwok");
-
+          if (!m.isGroup) return newReply(mess.OnlyGrupCTA);
           addCountCmd("#sticker", m.sender, _cmd);
           if (!quoted)
             return newReply(
@@ -1868,27 +1806,65 @@ ${prefix}nuliskiri Juna Selebew`);
           return newReply(
             `List respon dengan key : *${args1}* sudah ada di group ini.`
           );
+
         if (/image/.test(mime)) {
-          let media = await juna.downloadAndSaveMediaMessage(quoted);
-          const fd = new FormData();
-          fd.append("file", fs.readFileSync(media), ".tmp", ".jpg");
-          fetch("https://telegra.ph/upload", {
-            method: "POST",
-            body: fd,
-          })
-            .then((res) => res.json())
-            .then((json) => {
-              addResponList(
-                m.chat,
-                args1,
-                args2,
-                true,
-                `https://telegra.ph${json[0].src}`,
-                db_respon_list
-              );
-              newReply(`Sukses set list message dengan key : *${args1}*`);
-              if (fs.existsSync(media)) fs.unlinkSync(media);
+          try {
+            // Download pesan gambar dari WhatsApp
+            const stream = await downloadMediaMessage(
+              m,
+              "stream", // Bisa juga 'buffer'
+              {},
+              {
+                // Memungkinkan reupload jika media sudah dihapus
+                reuploadRequest: juna.updateMediaMessage,
+              }
+            );
+
+            // Buat nama file dinamis berdasarkan timestamp
+            const fileName = `./sampah/image-${Date.now()}.jpg`;
+            const writeStream = fs.createWriteStream(fileName);
+            stream.pipe(writeStream);
+
+            // Tunggu sampai file selesai disimpan
+            await new Promise((resolve, reject) => {
+              writeStream.on("finish", resolve);
+              writeStream.on("error", reject);
             });
+
+            // Konversi gambar menjadi base64
+            const imageBuffer = fs.readFileSync(fileName);
+            const base64Image = imageBuffer.toString("base64");
+
+            // Kirim ke Imgur menggunakan Fetch API
+            const response = await fetch("https://api.imgur.com/3/image", {
+              method: "POST",
+              headers: {
+                Authorization: "Client-ID a3091a9c848852a", // Ganti dengan Client-ID Anda
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ image: base64Image }),
+            });
+
+            const result = await response.json();
+            if (!response.ok)
+              throw new Error(result.data?.error || "Upload gagal!");
+
+            // Tambahkan URL gambar ke database respon bot
+            addResponList(
+              m.chat,
+              args1,
+              args2,
+              true,
+              result.data.link, // URL gambar dari Imgur
+              db_respon_list
+            );
+            newReply(`✅ Sukses menambahkan list dengan key: *${args1}*`);
+
+            // Hapus file setelah upload berhasil
+            if (fs.existsSync(fileName)) fs.unlinkSync(fileName);
+          } catch (error) {
+            newReply(`❌ Upload gagal: ${error.message}`);
+          }
         } else {
           addResponList(m.chat, args1, args2, false, "-", db_respon_list);
           newReply(`Sukses set list message dengan key : *${args1}*`);
@@ -2029,7 +2005,7 @@ ${prefix}nuliskiri Juna Selebew`);
         break;
 
       // Downloads Menu
-      case "tiktok":
+      case "tiktokvid":
         {
           if (isBan) return newReply("Lu di ban kocak awokwok");
 
@@ -2176,6 +2152,116 @@ _Please wait, the audio file is being sent..._`;
             );
           } catch (error) {
             newReply("Error");
+          }
+        }
+        break;
+      case "texttoimage":
+        {
+          if (!text)
+            return newReply(
+              `⚠️ Silakan masukkan prompt setelah perintah .texttoimage
+
+*example:*
+.texttoimage futuristic city -i 4 -a portrait -m fantasy
+
+*options:* 
+• -i | jumlah gambar (1-4) [def: 4]
+• -a | aspek rasio [def: square]
+• -m | model AI [def: lyra]
+
+*aspek rasio:*
+• square | 1:1 
+• landscape | 16:9
+• smallPortrait | 4:5
+• portrait | 9:16
+• wide | 21:9
+
+*list model:*
+• lyra
+• hydra
+• fantasy
+• portrait
+• inpunk
+• abstractWorld
+• anime
+• argo
+• cinematic
+• photography
+• scifi
+• detailedIllustration
+• 3dIllustration
+• flatIllustration
+• realvisxl
+• stylevisionxl
+• animaginexl
+• anime_2
+• anime_stylized
+• anime_vintage
+• pixelart`
+            );
+          juna.sendMessage(m.chat, { react: { text: `⏱️`, key: m.key } });
+          try {
+            // Parsing teks menjadi parameter
+            const args = text.match(/(?:[^\s"]+|"[^"]*")+/g); // Memecah teks dengan mempertimbangkan tanda kutip
+            let prompt = [];
+            let numImages = 1; // Default jumlah gambar
+            let aspectRatio = "square"; // Default aspek rasio
+            let model = "lyra"; // Default model
+
+            for (let i = 0; i < args.length; i++) {
+              if (args[i] === "-i" && args[i + 1])
+                numImages = parseInt(args[i + 1]);
+              else if (args[i] === "-a" && args[i + 1])
+                aspectRatio = args[i + 1];
+              else if (args[i] === "-m" && args[i + 1]) model = args[i + 1];
+              else if (!args[i].startsWith("-")) prompt.push(args[i]); // Menyusun prompt tanpa parameter
+            }
+
+            prompt = prompt.join(" "); // Gabungkan kembali prompt yang sudah dipisah
+
+            // Cek apakah prompt ada isinya
+            if (!prompt) {
+              return newReply(
+                "⚠️ Prompt tidak boleh kosong. Contoh penggunaan:\n.texttoimage A futuristic lantern -i 4 -a square -m lyra"
+              );
+            }
+
+            newReply("⏳ Sedang membuat gambar, harap tunggu...");
+
+            // Memanggil fungsi untuk membuat gambar
+            const response = await createImage(
+              prompt,
+              numImages,
+              aspectRatio,
+              model
+            );
+
+            if (response.status === "false") {
+              return newReply(`⚠️ ${response.message}`);
+            }
+
+            const creationId = response.data;
+            const imageResponse = await checkStatusAndGetImage(creationId);
+
+            if (imageResponse.status === "false") {
+              return newReply(`⚠️ ${imageResponse.message}`);
+            }
+
+            newReply("✅ Gambar berhasil di generate, mengirim...");
+
+            // Kirim setiap gambar ke pengguna
+            for (const image of imageResponse.data) {
+              await juna.sendMessage(
+                m.chat,
+                {
+                  image: { url: image.url },
+                  caption: `🖼️ Generated Image`,
+                },
+                { quoted: m }
+              );
+            }
+          } catch (error) {
+            newReply(`❌ Terjadi kesalahan: ${error.message}`);
           }
         }
         break;
@@ -3763,6 +3849,161 @@ https://chat.whatsapp.com/${response}
           newReply(`Sukses bc ke ${sewa.length}`);
         }
         break;
+      case "bcimage":
+      case "bcimg":
+        {
+          if (!isCreator) return newReply(mess.OnlyOwner);
+          if (!text)
+            return newReply(
+              `Reply foto dengan caption ${prefix + command} Tes`
+            );
+          if (!/image/.test(mime))
+            return newReply(
+              `Reply foto dengan caption ${prefix + command} Tes`
+            );
+          let anu = await store.chats.all().map((v) => v.id);
+          let media = await juna.downloadAndSaveMediaMessage(quoted);
+          let buffer = fs.readFileSync(media);
+          for (let apaan of anu) {
+            let txt = `「 BROADCAST 」\n\n${text}`;
+            juna.sendMessage(
+              apaan,
+              { image: buffer, caption: txt },
+              { quoted: fkontak }
+            );
+          }
+          newReply("Sukses Broadcast");
+        }
+        break;
+      case "bcvideo":
+      case "bcvid":
+        {
+          if (!isCreator) return newReply(mess.OnlyOwner);
+          if (!text)
+            return newReply(
+              `Reply video dengan caption ${prefix + command} Tes`
+            );
+          if (!/video/.test(mime))
+            return newReply(
+              `Reply video dengan caption ${prefix + command} Tes`
+            );
+          let anu = await store.chats.all().map((v) => v.id);
+          let media = await juna.downloadAndSaveMediaMessage(quoted);
+          let buffer = fs.readFileSync(media);
+          for (let apaan of anu) {
+            let txt = `「 BROADCAST 」\n\n${text}`;
+            juna.sendMessage(
+              apaan,
+              {
+                video: buffer,
+                caption: txt,
+                mimetype: "video/mp4",
+                duration: 909090909,
+              },
+              { quoted: fkontak }
+            );
+          }
+          newReply("Sukses Broadcast");
+        }
+        break;
+      case "bcaudio":
+      case "bcaud":
+        {
+          if (!isCreator) return newReply(mess.OnlyOwner);
+          if (!/audio/.test(mime))
+            return newReply(
+              `Reply audio dengan caption ${prefix + command} Tes`
+            );
+          let anu = await store.chats.all().map((v) => v.id);
+          let media = await juna.downloadAndSaveMediaMessage(quoted);
+          let buffer = fs.readFileSync(media);
+          for (let apaan of anu) {
+            let txt = `「 BROADCAST 」\n\n${text}`;
+            juna.sendMessage(
+              apaan,
+              {
+                audio: buffer,
+                mimetype: "audio/mpeg",
+                ptt: false,
+                duration: 909090909,
+              },
+              { quoted: fkontak }
+            );
+          }
+          newReply("Sukses Broadcast");
+        }
+        break;
+      case "bcvn":
+        {
+          if (!isCreator) return newReply(mess.OnlyOwner);
+          if (!/audio/.test(mime))
+            return newReply(
+              `Reply audio dengan caption ${prefix + command} Tes`
+            );
+          let anu = await store.chats.all().map((v) => v.id);
+          let media = await juna.downloadAndSaveMediaMessage(quoted);
+          let buffer = fs.readFileSync(media);
+          for (let apaan of anu) {
+            let txt = `「 BROADCAST 」\n\n${text}`;
+            juna.sendMessage(
+              apaan,
+              {
+                audio: buffer,
+                mimetype: "audio/mpeg",
+                ptt: true,
+                duration: 909090909,
+              },
+              { quoted: fkontak }
+            );
+          }
+          newReply("Sukses Broadcast");
+        }
+        break;
+      case "bcstiker":
+      case "bcstik":
+      case "bcsticker":
+        {
+          if (!isCreator) return newReply(mess.OnlyOwner);
+          if (!/webp/.test(mime))
+            return newReply(`Reply stiker dengan caption ${prefix + command}`);
+          let anu = await store.chats.all().map((v) => v.id);
+          let media = await juna.downloadAndSaveMediaMessage(quoted);
+          let buffer = fs.readFileSync(media);
+          for (let apaan of anu) {
+            let txt = `「 BROADCAST 」\n\n${text}`;
+            juna.sendMessage(
+              apaan,
+              { sticker: { url: media } },
+              { quoted: fkontak }
+            );
+          }
+          newReply("Sukses Broadcast");
+        }
+        break;
+      case "bc":
+      case "broadcast":
+        {
+          if (!isCreator) return newReply(mess.OnlyOwner);
+          if (!text) return newReply(`Example : ${prefix + command} Tes`);
+          let anu = await store.chats.all().map((v) => v.id);
+          let todd = await juna.reSize(`${setting.pathimg}`, 300, 300);
+          newReply(
+            `Mengirim Broadcast Ke ${anu.length} Chat\nWaktu Selesai ${
+              anu.length * 1.5
+            } detik`
+          );
+          for (let apaan of anu) {
+            await sleep(1500);
+            juna.sendMessage(apaan, {
+              image: {
+                url: `https://telegra.ph/file/5beafc90f688c8ad48b7d.png`,
+              },
+              caption: `*BROADCAST*\n\n${text}`,
+            });
+          }
+          newReply("Sukses Broadcast");
+        }
+        break;
       case "addprem":
         {
           if (!isCreator) return newReply(mess.OnlyOwner);
@@ -3845,7 +4086,12 @@ https://chat.whatsapp.com/${response}
         addCountCmd("#addsewa", m.sender, _cmd);
         url = url.split("https://chat.whatsapp.com/")[1];
         if (!text) return newReply(`Waktunya?`);
-        var data = await juna.groupAcceptInvite(url);
+        console.log(url);
+
+        var data = await juna.groupAcceptInviteV4(
+          m.chat,
+          "https://chat.whatsapp.com/FiUYeo6HMi62vw0u4m8HQh?mode=ems_copy_c"
+        );
         if (_sewa.checkSewaGroup(data, sewa))
           return newReply(`Bot sudah disewa oleh grup tersebut!`);
         _sewa.addSewaGroup(data, args[1], sewa);
@@ -4042,6 +4288,255 @@ https://chat.whatsapp.com/${response}
           delete this.menfes[find.id];
         }
         break;
+      case "pricelist": {
+        newReply("⏳ Mengambil pricelist..."); // feedback
+
+        await sleep(2000);
+
+        try {
+          const controller = require("./controllers/suntikController");
+          const data = await controller.pricelist(
+            CONFIG.TINPED_API_ID,
+            CONFIG.TINPED_API_KEY
+          );
+
+          const arg = (args[0] || "").toLowerCase();
+
+          // ambil semua kategori unik
+          const kategoriUnik = [
+            ...new Set(data.map((s) => s.kategori_rekomendasi.split(" ")[0])),
+          ];
+
+          if (!arg) {
+            // kalau user belum pilih kategori
+            let txt = "📋 *Pilih Kategori Pricelist:*\n\n";
+            kategoriUnik.forEach((k, i) => {
+              txt += `${i + 1}. ${k}\n`;
+            });
+            txt +=
+              "\nContoh: *.pricelist instagram* untuk lihat layanan Instagram\n";
+            return newReply(txt);
+          }
+
+          // filter by kategori argumen user
+          const filterKategori = data.filter((s) =>
+            s.kategori_rekomendasi.toLowerCase().includes(arg)
+          );
+
+          if (!filterKategori.length) {
+            return newReply(
+              `❌ Kategori *${arg}* tidak ditemukan.\n\nKategori tersedia:\n- ${kategoriUnik.join(
+                "\n- "
+              )}`
+            );
+          }
+
+          // group by kategori detail (Instagram Followers, Instagram Likes, etc)
+          const grouped = {};
+          filterKategori.forEach((s) => {
+            if (!grouped[s.kategori_rekomendasi])
+              grouped[s.kategori_rekomendasi] = [];
+            grouped[s.kategori_rekomendasi].push(s);
+          });
+
+          let txt = `📦 *Daftar Layanan ${arg.toUpperCase()}*\n`;
+          txt +=
+            "✨ Ketik `.ordersuntik (id layanan) - (jumlah) - (target)` untuk order.\n";
+          txt += "━━━━━━━━━━━━━━━━━━━━━━\n\n";
+
+          for (const kategori in grouped) {
+            txt += `📌 *${kategori}*\n`;
+            grouped[kategori].forEach((s, i) => {
+              txt += `*${i + 1}. ${s.name}*\n`;
+              txt += `      🆔 Layanan : ${s.service}\n`;
+              txt += `      💰 Rp${Number(s.price / 1000)
+                .toFixed(2)
+                .toLocaleString("id-ID")}\n`;
+              txt += `      🔢 Min: ${s.min} | Max: ${s.max}\n`;
+
+              // only print except on the end of loops
+              if (i !== grouped[kategori].length - 1)
+                txt += "──────────────────────\n";
+            });
+            txt += "\n";
+          }
+
+          txt +=
+            "*⚡ Catatan*\n" +
+            "1. Akun target dilarang private\n" +
+            "2. Khusus instagram matikan laporan ditinjau\n" +
+            "3. Hindari memesan dengan target & layanan yang sama jika pesanan sebelumnya belum selesai";
+          newReply(txt);
+        } catch (e) {
+          newReply(
+            "❌ Gagal ambil pricelist: " +
+              (e.response?.data?.message || e.message)
+          );
+        }
+        break;
+      }
+
+      case "tbalance":
+        {
+          newReply("⏳ Sedang mengambil balance..."); // user feedback
+          try {
+            const data =
+              await require("./controllers/suntikController").getBalance(
+                CONFIG.TINPED_API_ID,
+                CONFIG.TINPED_API_KEY
+              );
+
+            newReply(`Balance: Rp ${data.balance}`);
+          } catch (e) {
+            newReply("Gagal ambil balance: " + e.response.data.message);
+          }
+        }
+        break;
+
+      case "ordersuntik":
+        {
+          if (!text)
+            return newReply(
+              "❌ Format salah.\n\nGunakan:\n.ordersuntik id_layanan | jumlah | target\n\nContoh:\n.ordersuntik 123 | 100 | https://instagram.com/tinped.id/"
+            );
+
+          const [serviceId, qty, target] = text.split("|").map((s) => s.trim());
+          if (!serviceId || !qty || !target)
+            return newReply(
+              "❌ Format salah.\n\nContoh benar:\n.ordersuntik 123 | 100 | https://instagram.com/tinped.id/"
+            );
+
+          newReply("⏳ Membuat order... mohon tunggu sebentar");
+
+          await sleep(2000);
+
+          try {
+            const controller = require("./controllers/suntikController");
+            const invoiceResp = await controller.orderSuntik({
+              api_id: CONFIG.TINPED_API_ID,
+              api_key: CONFIG.TINPED_API_KEY,
+              serviceId,
+              qty,
+              target,
+              buyerPhone: m.sender,
+              buyerName: pushname,
+              returnUrl: CONFIG.APP_RETURN_URL,
+              callbackUrl: CONFIG.APP_CALLBACK_URL,
+            });
+
+            const paymentUrl = invoiceResp.invoice?.paymentUrl;
+            const qrString = invoiceResp.invoice?.qrString;
+            const ord = invoiceResp.order;
+
+            // Jika ada QR string → kirim QR code sebagai gambar
+            if (qrString) {
+              const qrBuffer = await QRCode.toBuffer(qrString, { type: "png" });
+
+              await juna.sendMessage(
+                m.chat,
+                {
+                  image: qrBuffer,
+                  caption:
+                    `💳 *INVOICE PEMBAYARAN*\n` +
+                    `━━━━━━━━━━━━━━━━━━\n` +
+                    `🆔 *Order ID* : ${ord?.orderId}\n` +
+                    `📌 *Layanan*  : ${ord?.serviceName}\n` +
+                    `🔢 *Jumlah*   : ${ord?.qty}\n` +
+                    `🎯 *Target*   : ${ord?.target}\n` +
+                    `💰 *Total*    : Rp${Number(ord?.total).toLocaleString(
+                      "id-ID"
+                    )}\n` +
+                    `━━━━━━━━━━━━━━━━━━\n\n` +
+                    `⚡ Silakan scan QR di atas untuk melakukan pembayaran.\n` +
+                    `Jika ada kendala, hubungi *Owner*.`,
+                },
+                { quoted: m }
+              );
+            } else if (paymentUrl) {
+              await newReply(
+                `💳 *INVOICE PEMBAYARAN*\n━━━━━━━━━━━━━━━━━━\n🆔 Order ID : ${
+                  ord?.orderId
+                }\n📌 Layanan  : ${ord?.serviceName}\n🔢 Jumlah   : ${
+                  ord?.qty
+                }\n🎯 Target   : ${ord?.target}\n💰 Total    : Rp${Number(
+                  ord?.total
+                ).toLocaleString(
+                  "id-ID"
+                )}\n━━━━━━━━━━━━━━━━━━\n\n🔗 Silakan lakukan pembayaran melalui link berikut:\n${paymentUrl}`
+              );
+            } else {
+              newReply(
+                "ℹ️ Invoice berhasil dibuat:\n" +
+                  JSON.stringify(invoiceResp.invoice, null, 2).slice(0, 400)
+              );
+            }
+          } catch (e) {
+            if (e.response?.data) {
+              newReply(
+                "❌ Gagal buat order: " +
+                  (e.response.data.Message || e.response.data.message)
+              );
+            } else {
+              newReply("❌ Gagal buat order: " + e.message);
+            }
+          }
+        }
+        break;
+
+      case "ceksuntik": {
+        const id = text || args[0];
+        if (!id) return newReply("❌ Kirim .ceksuntik (orderId)");
+
+        try {
+          const controller = require("./controllers/suntikController");
+          const result = await controller.cekSuntik(id);
+
+          const { order, status, paymentUrl } = result;
+
+          let txt = "📦 *DETAIL PESANAN SUNTIK FOLLOWERS*\n";
+          txt += "━━━━━━━━━━━━━━━━━━━━━━\n\n";
+
+          txt += `🆔 *Order ID*   : ${order.orderId}\n`;
+          txt += `📌 *Layanan*    : ${order.serviceName}\n`;
+          txt += `🔢 *Jumlah*     : ${order.qty}\n`;
+          txt += `🎯 *Target*     : ${order.target}\n`;
+          txt += `👤 *Pemesan*    : ${order.buyerName}\n`;
+          txt += `💰 *Total Bayar*: Rp${Number(order.total).toLocaleString(
+            "id-ID"
+          )}\n`;
+          txt += `🕒 *Dibuat*     : ${new Date(order.createdAt).toLocaleString(
+            "id-ID"
+          )}\n`;
+          txt += `🕒 *Update Terakhir* : ${new Date(
+            order.updatedAt
+          ).toLocaleString("id-ID")}\n\n`;
+
+          txt += "━━━━━━━━━━━━━━━━━━━━━━\n";
+          txt += `📡 *Status Pesanan*\n`;
+
+          if (status) {
+            // sudah ke provider
+            txt += `   ➤ Status : ${status.data.status}\n`;
+            txt += `   ➤ Start  : ${status.data.start_count}\n`;
+            txt += `   ➤ Sisa   : ${status.data.remains}\n`;
+          } else {
+            // pending pembayaran
+            txt += `   ➤ Status : ⏳ *Menunggu Pembayaran*\n`;
+            if (paymentUrl) {
+              txt += `   ➤ Link Bayar: ${paymentUrl}\n`;
+            }
+          }
+
+          txt += "━━━━━━━━━━━━━━━━━━━━━━\n\n";
+          txt += "✨ Terima kasih telah menggunakan layanan kami ✨";
+
+          newReply(txt);
+        } catch (e) {
+          newReply("❌ Gagal cek pesanan: " + (e?.message || "Unknown error"));
+        }
+        break;
+      }
+
       default:
         if (budy && ["proses", "Proses"].includes(budy) && !isCmd) {
           if (!m.isGroup) return newReply("Fitur Khusus Group!");

@@ -1903,11 +1903,11 @@
       },
       {
         "nama": "#antilink",
-        "count": 1
+        "count": 8
       },
       {
         "nama": "#mute",
-        "count": 1
+        "count": 6
       },
       {
         "nama": "#allmenu",
@@ -1936,6 +1936,10 @@
       {
         "nama": "#mainmenu",
         "count": 1
+      },
+      {
+        "nama": "#sticker",
+        "count": 3
       }
     ]
   },
@@ -8211,6 +8215,58 @@
     "db": [
       {
         "nama": "#menu",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "jid": "6285820006197@s.whatsapp.net",
+    "db": [
+      {
+        "nama": "#menu",
+        "count": 2
+      },
+      {
+        "nama": "#allmenu",
+        "count": 2
+      }
+    ]
+  },
+  {
+    "jid": "6285931018333@s.whatsapp.net",
+    "db": [
+      {
+        "nama": "#ownermenu",
+        "count": 1
+      },
+      {
+        "nama": "#menu",
+        "count": 3
+      },
+      {
+        "nama": "#allmenu",
+        "count": 1
+      },
+      {
+        "nama": "#addsewa",
+        "count": 16
+      }
+    ]
+  },
+  {
+    "jid": "6281287730675@s.whatsapp.net",
+    "db": [
+      {
+        "nama": "#allmenu",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "jid": "6285280128215@s.whatsapp.net",
+    "db": [
+      {
+        "nama": "#allmenu",
         "count": 1
       }
     ]

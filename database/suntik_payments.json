@@ -1,0 +1,355 @@
+[
+  {
+    "orderId": "SNTK-1756535517207",
+    "merchantOrderId": "SNTK-1756535517207",
+    "duitkuResponse": {
+      "merchantCode": "DS23960",
+      "reference": "DS2396025JCR3AG7Y02PHAN3",
+      "paymentUrl": "https://sandbox.duitku.com/topup/topupdirectv2.aspx?ref=SP25JTF3HF75QLE0PPU",
+      "qrString": "00020101021226560016ID.CO.SHOPEE.WWW011893600918000000025202032520303UMI52041234530336054073730.005802ID5906Duitku6015KOTA JAKARTA SE6101062230519SP25JTF3HF75QLE0PPU63042AF4",
+      "amount": "3730",
+      "statusCode": "00",
+      "statusMessage": "SUCCESS"
+    },
+    "status": "pending",
+    "createdAt": "2025-08-30T06:31:59.497Z"
+  },
+  {
+    "orderId": "SNTK-1756535618800",
+    "merchantOrderId": "SNTK-1756535618800",
+    "duitkuResponse": {
+      "merchantCode": "DS23960",
+      "reference": "DS2396025IIPWLTMVDCI62QB",
+      "paymentUrl": "https://sandbox.duitku.com/topup/topupdirectv2.aspx?ref=SP2562NW2O3VH3ZW68X",
+      "qrString": "00020101021226560016ID.CO.SHOPEE.WWW011893600918000000025202032520303UMI52041234530336054073730.005802ID5906Duitku6015KOTA JAKARTA SE6101062230519SP2562NW2O3VH3ZW68X63045610",
+      "amount": "3730",
+      "statusCode": "00",
+      "statusMessage": "SUCCESS"
+    },
+    "status": "pending",
+    "createdAt": "2025-08-30T06:33:41.362Z"
+  },
+  {
+    "orderId": "SNTK-1756535672238",
+    "merchantOrderId": "SNTK-1756535672238",
+    "duitkuResponse": {
+      "merchantCode": "DS23960",
+      "reference": "DS2396025IMW8IIQXD8L8Z4Q",
+      "paymentUrl": "https://sandbox.duitku.com/topup/topupdirectv2.aspx?ref=SP25ZN0MGFOBGVXW5OB",
+      "qrString": "00020101021226560016ID.CO.SHOPEE.WWW011893600918000000025202032520303UMI5204123453033605406373.005802ID5906Duitku6015KOTA JAKARTA SE6101062230519SP25ZN0MGFOBGVXW5OB6304C415",
+      "amount": "373",
+      "statusCode": "00",
+      "statusMessage": "SUCCESS"
+    },
+    "status": "pending",
+    "createdAt": "2025-08-30T06:34:34.141Z"
+  },
+  {
+    "orderId": "SNTK-1756542638423",
+    "merchantOrderId": "SNTK-1756542638423",
+    "duitkuResponse": {
+      "merchantCode": "DS23960",
+      "reference": "DS2396025EH5SXCCZECCBPAI",
+      "paymentUrl": "https://sandbox.duitku.com/topup/topupdirectv2.aspx?ref=SP25MF1VUFH7REX8ZSR",
+      "qrString": "00020101021226560016ID.CO.SHOPEE.WWW011893600918000000025202032520303UMI52041234530336054073730.005802ID5906Duitku6015KOTA JAKARTA SE6101062230519SP25MF1VUFH7REX8ZSR63043698",
+      "amount": "3730",
+      "statusCode": "00",
+      "statusMessage": "SUCCESS"
+    },
+    "status": "pending",
+    "createdAt": "2025-08-30T08:30:42.035Z"
+  },
+  {
+    "orderId": "SNTK-1756543308352",
+    "merchantOrderId": "SNTK-1756543308352",
+    "duitkuResponse": {
+      "merchantCode": "DS23960",
+      "reference": "DS2396025X4PZA8M80ZW4GY1",
+      "paymentUrl": "https://sandbox.duitku.com/topup/topupdirectv2.aspx?ref=SP25GACNCXWNQSVY52G",
+      "qrString": "00020101021226560016ID.CO.SHOPEE.WWW011893600918000000025202032520303UMI52041234530336054073730.005802ID5906Duitku6015KOTA JAKARTA SE6101062230519SP25GACNCXWNQSVY52G63046438",
+      "amount": "3730",
+      "statusCode": "00",
+      "statusMessage": "SUCCESS"
+    },
+    "status": "pending",
+    "createdAt": "2025-08-30T08:41:50.753Z"
+  },
+  {
+    "orderId": "JEI-1756543655049",
+    "merchantOrderId": "JEI-1756543655049",
+    "duitkuResponse": {
+      "merchantCode": "DS23960",
+      "reference": "DS23960253C6Y1N1NH1SVBKX",
+      "paymentUrl": "https://sandbox.duitku.com/topup/topupdirectv2.aspx?ref=SP25KBO1OKN4CZC3VE0",
+      "qrString": "00020101021226560016ID.CO.SHOPEE.WWW011893600918000000025202032520303UMI52041234530336054073730.005802ID5906Duitku6015KOTA JAKARTA SE6101062230519SP25KBO1OKN4CZC3VE06304AA62",
+      "amount": "3730",
+      "statusCode": "00",
+      "statusMessage": "SUCCESS"
+    },
+    "status": "pending",
+    "createdAt": "2025-08-30T08:47:37.300Z"
+  },
+  {
+    "orderId": "JEI-1756543847497",
+    "merchantOrderId": "JEI-1756543847497",
+    "duitkuResponse": {
+      "merchantCode": "DS23960",
+      "reference": "DS239602535XEUPA2KNH2FOU",
+      "paymentUrl": "https://sandbox.duitku.com/topup/topupdirectv2.aspx?ref=SP25WKLMTCDB6A1HU03",
+      "qrString": "00020101021226560016ID.CO.SHOPEE.WWW011893600918000000025202032520303UMI52041234530336054073730.005802ID5906Duitku6015KOTA JAKARTA SE6101062230519SP25WKLMTCDB6A1HU03630403C8",
+      "amount": "3730",
+      "statusCode": "00",
+      "statusMessage": "SUCCESS"
+    },
+    "status": "pending",
+    "createdAt": "2025-08-30T08:50:49.294Z"
+  },
+  {
+    "orderId": "JEI-1756544226162",
+    "merchantOrderId": "JEI-1756544226162",
+    "duitkuResponse": {
+      "merchantCode": "DS23960",
+      "reference": "DS2396025IVNBXNOIXGFI88K",
+      "paymentUrl": "https://sandbox.duitku.com/topup/topupdirectv2.aspx?ref=SP25YWWIJKV65SMLNFL",
+      "qrString": "00020101021226560016ID.CO.SHOPEE.WWW011893600918000000025202032520303UMI52041234530336054073730.005802ID5906Duitku6015KOTA JAKARTA SE6101062230519SP25YWWIJKV65SMLNFL630402EB",
+      "amount": "3730",
+      "statusCode": "00",
+      "statusMessage": "SUCCESS"
+    },
+    "status": "pending",
+    "createdAt": "2025-08-30T08:57:08.811Z"
+  },
+  {
+    "orderId": "JEI-1756544533760",
+    "merchantOrderId": "JEI-1756544533760",
+    "duitkuResponse": {
+      "merchantCode": "DS23960",
+      "reference": "DS2396025BIDURMCCSECDMXE",
+      "paymentUrl": "https://sandbox.duitku.com/topup/topupdirectv2.aspx?ref=SP25HKOWM4R4RRUF8I5",
+      "qrString": "00020101021226560016ID.CO.SHOPEE.WWW011893600918000000025202032520303UMI52041234530336054073730.005802ID5906Duitku6015KOTA JAKARTA SE6101062230519SP25HKOWM4R4RRUF8I56304F216",
+      "amount": "3730",
+      "statusCode": "00",
+      "statusMessage": "SUCCESS"
+    },
+    "status": "pending",
+    "createdAt": "2025-08-30T09:02:16.106Z"
+  },
+  {
+    "orderId": "JEI-1756544621361",
+    "merchantOrderId": "JEI-1756544621361",
+    "duitkuResponse": {
+      "merchantCode": "DS23960",
+      "reference": "DS2396025GG4NEB81XUTHAST",
+      "paymentUrl": "https://sandbox.duitku.com/topup/topupdirectv2.aspx?ref=SP251QUXG10YD5SUF15",
+      "qrString": "00020101021226560016ID.CO.SHOPEE.WWW011893600918000000025202032520303UMI52041234530336054073730.005802ID5906Duitku6015KOTA JAKARTA SE6101062230519SP251QUXG10YD5SUF1563040A2D",
+      "amount": "3730",
+      "statusCode": "00",
+      "statusMessage": "SUCCESS"
+    },
+    "status": "pending",
+    "createdAt": "2025-08-30T09:03:43.268Z"
+  },
+  {
+    "orderId": "JEI-1756545448762",
+    "merchantOrderId": "JEI-1756545448762",
+    "duitkuResponse": {
+      "merchantCode": "DS23960",
+      "reference": "DS2396025NZXQ5SD5IIIFCHZ",
+      "paymentUrl": "https://sandbox.duitku.com/topup/topupdirectv2.aspx?ref=SP25PJF052QMZFDWQC4",
+      "qrString": "00020101021226560016ID.CO.SHOPEE.WWW011893600918000000025202032520303UMI52041234530336054071119.005802ID5906Duitku6015KOTA JAKARTA SE6101062230519SP25PJF052QMZFDWQC463044BDA",
+      "amount": "1119",
+      "statusCode": "00",
+      "statusMessage": "SUCCESS"
+    },
+    "status": "pending",
+    "createdAt": "2025-08-30T09:17:30.896Z"
+  },
+  {
+    "orderId": "JEI-1756547133190",
+    "merchantOrderId": "JEI-1756547133190",
+    "duitkuResponse": {
+      "merchantCode": "DS23960",
+      "reference": "DS2396025GEEFJ5FSUPOFRLS",
+      "paymentUrl": "https://sandbox.duitku.com/topup/topupdirectv2.aspx?ref=SP25EMIA0QWRMN3QJSN",
+      "qrString": "00020101021226560016ID.CO.SHOPEE.WWW011893600918000000025202032520303UMI52041234530336054071119.005802ID5906Duitku6015KOTA JAKARTA SE6101062230519SP25EMIA0QWRMN3QJSN63049D33",
+      "amount": "1119",
+      "statusCode": "00",
+      "statusMessage": "SUCCESS"
+    },
+    "status": "pending",
+    "createdAt": "2025-08-30T09:45:36.776Z"
+  },
+  {
+    "orderId": "JEI-1756548439408",
+    "merchantOrderId": "JEI-1756548439408",
+    "duitkuResponse": {
+      "merchantCode": "DS23960",
+      "reference": "DS2396025OTWMXOURQF4NWKF",
+      "paymentUrl": "https://sandbox.duitku.com/topup/topupdirectv2.aspx?ref=NQ25740QTE5E1IOGHTZ",
+      "qrString": "00020101021226670016COM.NOBUBANK.WWW01189360050300000488570214070400000317450303UMI51440014ID.CO.QRIS.WWW0215ID20200814003720303UMI520455375303360540411195802ID5911DUITKU SNAP600332761051531062790114017033625090400519NQ25740QTE5E1IOGHTZ0619NQ25740QTE5E1IOGHTZ0703A010804POSP6304D032",
+      "amount": "1119",
+      "statusCode": "00",
+      "statusMessage": "SUCCESS"
+    },
+    "status": "paid",
+    "createdAt": "2025-08-30T10:07:22.043Z",
+    "reference": "DXXXXCX80TXXX5Q70QCI",
+    "updatedAt": "2025-08-30T10:17:13.217Z"
+  },
+  {
+    "orderId": "JEI-1756549745680",
+    "merchantOrderId": "JEI-1756549745680",
+    "duitkuResponse": {
+      "merchantCode": "DS23960",
+      "reference": "DS2396025EJ6LSXNH871C0M3",
+      "paymentUrl": "https://sandbox.duitku.com/topup/topupdirectv2.aspx?ref=NQ25UIWNPZJIPNJSJZJ",
+      "qrString": "00020101021226670016COM.NOBUBANK.WWW01189360050300000488570214070400000317450303UMI51440014ID.CO.QRIS.WWW0215ID20200814003720303UMI520455375303360540411195802ID5911DUITKU SNAP600332761051531062790114017252224084000519NQ25UIWNPZJIPNJSJZJ0619NQ25UIWNPZJIPNJSJZJ0703A010804POSP630453F4",
+      "amount": "1119",
+      "statusCode": "00",
+      "statusMessage": "SUCCESS"
+    },
+    "status": "pending",
+    "createdAt": "2025-08-30T10:29:07.935Z",
+    "reference": "DXXXXCX80TXXX5Q70QCI",
+    "updatedAt": "2025-08-30T10:31:59.001Z"
+  },
+  {
+    "orderId": "JEI-1756556271704",
+    "merchantOrderId": "JEI-1756556271704",
+    "duitkuResponse": {
+      "merchantCode": "DS23960",
+      "reference": "DS2396025O4ZO01X4K567OSU",
+      "paymentUrl": "https://sandbox.duitku.com/topup/topupdirectv2.aspx?ref=NQ25C1HT6X3YWRS81XO",
+      "qrString": "00020101021226670016COM.NOBUBANK.WWW01189360050300000488570214070400000317450303UMI51440014ID.CO.QRIS.WWW0215ID20200814003720303UMI520455375303360540411195802ID5911DUITKU SNAP600332761051531062790114019141105080140519NQ25C1HT6X3YWRS81XO0619NQ25C1HT6X3YWRS81XO0703A010804POSP630479DC",
+      "amount": "1119",
+      "statusCode": "00",
+      "statusMessage": "SUCCESS"
+    },
+    "status": "paid",
+    "createdAt": "2025-08-30T12:17:56.866Z",
+    "reference": "DXXXXCX80TXXX5Q70QCI",
+    "updatedAt": "2025-08-30T14:15:42.196Z"
+  },
+  {
+    "orderId": "JEI-1756563732884",
+    "merchantOrderId": "JEI-1756563732884",
+    "duitkuResponse": {
+      "merchantCode": "DS23960",
+      "reference": "DS2396025GFWI2Z0GN7ESR62",
+      "paymentUrl": "https://sandbox.duitku.com/topup/topupdirectv2.aspx?ref=NQ25HYMBHNDRLQ4PE0X",
+      "qrString": "00020101021226670016COM.NOBUBANK.WWW01189360050300000488570214070400000317450303UMI51440014ID.CO.QRIS.WWW0215ID20200814003720303UMI520455375303360540411195802ID5911DUITKU SNAP600332761051531062790114021184483524500519NQ25HYMBHNDRLQ4PE0X0619NQ25HYMBHNDRLQ4PE0X0703A010804POSP6304191E",
+      "amount": "1119",
+      "statusCode": "00",
+      "statusMessage": "SUCCESS"
+    },
+    "status": "paid",
+    "createdAt": "2025-08-30T14:22:16.922Z",
+    "reference": "DXXXXCX80TXXX5Q70QCI",
+    "updatedAt": "2025-08-30T14:22:45.582Z"
+  },
+  {
+    "orderId": "JEI-1756564667426",
+    "merchantOrderId": "JEI-1756564667426",
+    "duitkuResponse": {
+      "merchantCode": "DS23960",
+      "reference": "DS2396025F2JJJUI24OU4U6Q",
+      "paymentUrl": "https://sandbox.duitku.com/topup/topupdirectv2.aspx?ref=NQ2513C5FQLA3YB2TQO",
+      "qrString": "00020101021226670016COM.NOBUBANK.WWW01189360050300000488570214070400000317450303UMI51440014ID.CO.QRIS.WWW0215ID20200814003720303UMI520455375303360540411195802ID5911DUITKU SNAP600332761051531062790114021341898346020519NQ2513C5FQLA3YB2TQO0619NQ2513C5FQLA3YB2TQO0703A010804POSP63044ECC",
+      "amount": "1119",
+      "statusCode": "00",
+      "statusMessage": "SUCCESS"
+    },
+    "status": "pending",
+    "createdAt": "2025-08-30T14:37:51.076Z"
+  },
+  {
+    "orderId": "JEI-1756566846890",
+    "merchantOrderId": "JEI-1756566846890",
+    "duitkuResponse": {
+      "merchantCode": "DS23960",
+      "reference": "DS23960254N7SFPNJVBIEPRR",
+      "paymentUrl": "https://sandbox.duitku.com/topup/topupdirectv2.aspx?ref=NQ25OSPC3HNATA6NE7H",
+      "qrString": "00020101021226670016COM.NOBUBANK.WWW01189360050300000488570214070400000317450303UMI51440014ID.CO.QRIS.WWW0215ID20200814003720303UMI520455375303360540411195802ID5911DUITKU SNAP600332761051531062790114022103858191780519NQ25OSPC3HNATA6NE7H0619NQ25OSPC3HNATA6NE7H0703A010804POSP63045812",
+      "amount": "1119",
+      "statusCode": "00",
+      "statusMessage": "SUCCESS"
+    },
+    "status": "pending",
+    "createdAt": "2025-08-30T15:14:10.589Z"
+  },
+  {
+    "orderId": "JEI-1756566995141",
+    "merchantOrderId": "JEI-1756566995141",
+    "duitkuResponse": {
+      "merchantCode": "DS23960",
+      "reference": "DS2396025LGWUJWXVNKH7GK5",
+      "paymentUrl": "https://sandbox.duitku.com/topup/topupdirectv2.aspx?ref=NQ25PVKWVTWYGHD7JJI",
+      "qrString": "00020101021226670016COM.NOBUBANK.WWW01189360050300000488570214070400000317450303UMI51440014ID.CO.QRIS.WWW0215ID20200814003720303UMI520455375303360540411195802ID5911DUITKU SNAP600332761051531062790114022130534142290519NQ25PVKWVTWYGHD7JJI0619NQ25PVKWVTWYGHD7JJI0703A010804POSP63048545",
+      "amount": "1119",
+      "statusCode": "00",
+      "statusMessage": "SUCCESS"
+    },
+    "status": "pending",
+    "createdAt": "2025-08-30T15:16:37.328Z"
+  },
+  {
+    "orderId": "JEI-1756567305062",
+    "merchantOrderId": "JEI-1756567305062",
+    "duitkuResponse": {
+      "merchantCode": "DS23960",
+      "reference": "DS23960252ATG5WLX4CAHCO1",
+      "paymentUrl": "https://sandbox.duitku.com/topup/topupdirectv2.aspx?ref=NQ25WNAOFBUD6SZLMQI",
+      "qrString": "00020101021226670016COM.NOBUBANK.WWW01189360050300000488570214070400000317450303UMI51440014ID.CO.QRIS.WWW0215ID20200814003720303UMI520455375303360540411195802ID5911DUITKU SNAP600332761051531062790114022181526895230519NQ25WNAOFBUD6SZLMQI0619NQ25WNAOFBUD6SZLMQI0703A010804POSP6304A176",
+      "amount": "1119",
+      "statusCode": "00",
+      "statusMessage": "SUCCESS"
+    },
+    "status": "pending",
+    "createdAt": "2025-08-30T15:21:47.310Z"
+  },
+  {
+    "orderId": "JEI-1756567594954",
+    "merchantOrderId": "JEI-1756567594954",
+    "duitkuResponse": {
+      "merchantCode": "DS23960",
+      "reference": "DS2396025LFATENXZISY2TGC",
+      "paymentUrl": "https://sandbox.duitku.com/topup/topupdirectv2.aspx?ref=NQ25JGCNRFBQ2I31U2Q",
+      "qrString": "00020101021226670016COM.NOBUBANK.WWW01189360050300000488570214070400000317450303UMI51440014ID.CO.QRIS.WWW0215ID20200814003720303UMI520455375303360540411195802ID5911DUITKU SNAP600332761051531062790114022230492913080519NQ25JGCNRFBQ2I31U2Q0619NQ25JGCNRFBQ2I31U2Q0703A010804POSP6304718A",
+      "amount": "1119",
+      "statusCode": "00",
+      "statusMessage": "SUCCESS"
+    },
+    "status": "pending",
+    "createdAt": "2025-08-30T15:26:36.955Z"
+  },
+  {
+    "orderId": "JEI-1756568264103",
+    "merchantOrderId": "JEI-1756568264103",
+    "duitkuResponse": {
+      "merchantCode": "DS23960",
+      "reference": "DS23960257PVA47L5MHROVYD",
+      "paymentUrl": "https://sandbox.duitku.com/topup/topupdirectv2.aspx?ref=NQ25MIMFBDIEYYXGK0G",
+      "qrString": "00020101021226670016COM.NOBUBANK.WWW01189360050300000488570214070400000317450303UMI51440014ID.CO.QRIS.WWW0215ID20200814003720303UMI520455375303360540411195802ID5911DUITKU SNAP600332761051531062790114022341455865530519NQ25MIMFBDIEYYXGK0G0619NQ25MIMFBDIEYYXGK0G0703A010804POSP63045041",
+      "amount": "1119",
+      "statusCode": "00",
+      "statusMessage": "SUCCESS"
+    },
+    "status": "pending",
+    "createdAt": "2025-08-30T15:37:46.606Z"
+  },
+  {
+    "orderId": "JEI-1756631251709",
+    "merchantOrderId": "JEI-1756631251709",
+    "duitkuResponse": {
+      "merchantCode": "DS23960",
+      "reference": "DS2396025YPLNSGTMQ4QA8RA",
+      "paymentUrl": "https://sandbox.duitku.com/topup/topupdirectv2.aspx?ref=NQ2577RERVIA0X5H50E",
+      "qrString": "00020101021226670016COM.NOBUBANK.WWW01189360050300000488570214070400000317450303UMI51440014ID.CO.QRIS.WWW0215ID20200814003720303UMI520455375303360540435185802ID5911DUITKU SNAP600332761051531062790114116040151583830519NQ2577RERVIA0X5H50E0619NQ2577RERVIA0X5H50E0703A010804POSP6304E484",
+      "amount": "3518",
+      "statusCode": "00",
+      "statusMessage": "SUCCESS"
+    },
+    "status": "pending",
+    "createdAt": "2025-08-31T09:07:34.828Z"
+  }
+]

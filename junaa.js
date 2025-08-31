@@ -13,7 +13,7 @@ const {
   jidDecode,
   proto,
   delay,
-} = require("@adiwajshing/baileys");
+} = require("@whiskeysockets/baileys");
 const pino = require("pino");
 const { Boom } = require("@hapi/boom");
 const fs = require("fs");
@@ -24,6 +24,12 @@ const fetch = require("node-fetch");
 const figlet = require("figlet");
 const axios = require("axios");
 const PhoneNumber = require("awesome-phonenumber");
+const callbackServer = require("./lib/callbackDuitku");
+
+// removed readline & pairing code flow imports
+// const readline = require("readline");
+
+const QRCode = require("qrcode"); // use QRCode.toString / toDataURL
 const {
   imageToWebp,
   videoToWebp,
@@ -42,24 +48,26 @@ const {
   await,
   sleep,
 } = require("./lib/myfunc");
-const { toBuffer, toDataURL } = require("qrcode");
 const express = require("express");
 
 let app = express();
+const suntikController = require("./controllers/suntikController");
 const { createServer } = require("http");
-let server = createServer(app);
-let _qr = "invalid";
-let PORT = 3000 || 8000 || 8080;
+let PORT = 5000;
+let juna;
 
-//require("http").createServer((_, res) => res.end("Uptime!")).listen(8080)
+app.use(express.json()); // supaya req.body parsed
 
-//libb
+// store latest QR as dataURL (so front-end can fetch /qr)
+let _qr = null;
+
+// libs that your code uses
 const { quote } = require("./lib/quote");
 const { TelegraPh } = require("./lib/uploader");
 const { isSetWelcome, getTextSetWelcome } = require("./lib/setwelcome");
 const { isSetLeft, getTextSetLeft } = require("./lib/setleft");
 
-//setting
+// settings
 let set_welcome_db = JSON.parse(fs.readFileSync("./database/set_welcome.json"));
 let set_left_db = JSON.parse(fs.readFileSync("./database/set_left.json"));
 let setting = JSON.parse(fs.readFileSync("./config.json"));
@@ -67,7 +75,9 @@ let _welcome = JSON.parse(fs.readFileSync("./database/welcome.json"));
 let _left = JSON.parse(fs.readFileSync("./database/left.json"));
 let antidelete = JSON.parse(fs.readFileSync("./database/antidelete.json"));
 let antionce = JSON.parse(fs.readFileSync("./database/antionce.json"));
-let session = `./${setting.sessionName}.json`;
+let session = `./${setting.sessionName}`; // use folder for multi-file auth
+
+callbackServer.startCallbackServer();
 
 const startJuna = async () => {
   global.db = JSON.parse(fs.readFileSync("./database/database.json"));
@@ -98,36 +108,22 @@ const startJuna = async () => {
     );
     console.log(chalk.yellow(`\n${chalk.yellow("Created By Justin")}\n`));
   }
-  const store = makeInMemoryStore({
-    logger: pino().child({ level: "silent", stream: "store" }),
-  });
+  title();
 
-  const { state, saveCreds } = await useMultiFileAuthState(
-    `./${setting.sessionName}`
-  );
+  const store = {
+    chats: {},
+    contacts: {},
+  };
+
   const { version, isLatest } = await fetchLatestBaileysVersion();
 
-  function nocache(module, cb = () => {}) {
-    fs.watchFile(require.resolve(module), async () => {
-      await uncache(require.resolve(module));
-      cb(module);
-    });
-  }
+  // useMultiFileAuthState untuk simpan auth ke folder session
+  const { state, saveCreds } = await useMultiFileAuthState(session);
 
-  function uncache(module = ".") {
-    return new Promise((resolve, reject) => {
-      try {
-        delete require.cache[require.resolve(module)];
-        resolve();
-      } catch (e) {
-        reject(e);
-      }
-    });
-  }
-  const juna = junaConnect({
+  juna = junaConnect({
     version,
     logger: pino({ level: "silent" }),
-    printQRInTerminal: true,
+    printQRInTerminal: false, // kita handle QR manual (terminal + dataURL)
     patchMessageBeforeSending: (message) => {
       const requiresPatch = !!(
         message.buttonsMessage ||
@@ -149,76 +145,118 @@ const startJuna = async () => {
       }
       return message;
     },
-    browser: ["Jei Bot Multi Device", "Safari", "1.0.0"],
+    browser: ["Windows", "Chrome", "Chrome 114.0.5735.198"],
     auth: state,
   });
 
-  require("./junn");
-  nocache("./junn", (module) =>
-    console.log(
-      chalk.greenBright("[ UPDATED ]") +
-        new Date() +
-        chalk.cyanBright(` "${module}" Telah diupdate!`)
-    )
-  );
-
+  // ensure normalized jid available
   if (juna.user && juna.user.id)
     juna.user.jid = jidNormalizedUser(juna.user.id);
 
+  // Save creds on update (extra safety)
+  juna.ev.on("creds.update", saveCreds);
+
+  // connection.update -> handle QR + connection states
   juna.ev.on("connection.update", async (update) => {
-    const { connection, lastDisconnect, qr } = update;
-    if (qr) {
-      app.use(async (req, res) => {
-        res.setHeader("content-type", "image/png");
-        res.end(await toBuffer(qr));
-      });
-      app.use(express.static(path.join(__dirname, "views")));
-      server.listen(PORT, () => {
-        console.log("App listened on port", PORT);
-      });
-    }
-    if (connection === "close") {
-      let reason = new Boom(lastDisconnect?.error)?.output.statusCode;
-      if (reason === DisconnectReason.badSession) {
-        console.log(`Bad Session File, Please Delete Session and Scan Again`);
-        juna.logout();
-      } else if (reason === DisconnectReason.connectionClosed) {
-        console.log("Connection closed, reconnecting....");
-        startJuna();
-      } else if (reason === DisconnectReason.connectionLost) {
-        console.log("Connection Lost from Server, reconnecting...");
-        startJuna();
-      } else if (reason === DisconnectReason.connectionReplaced) {
-        console.log(
-          "Connection Replaced, Another New Session Opened, Please Close Current Session First"
-        );
-        juna.logout();
-      } else if (reason === DisconnectReason.loggedOut) {
-        console.log(`Device Logged Out, Please Scan Again And Run.`);
-        juna.logout();
-      } else if (reason === DisconnectReason.restartRequired) {
-        console.log("Restart Required, Restarting...");
-        startJuna();
-      } else if (reason === DisconnectReason.timedOut) {
-        console.log("junaection TimedOut, Reconnecting...");
-        startJuna();
-      } else juna.end(`Unknown DisconnectReason: ${reason}|${connection}`);
-    }
+    const {
+      connection,
+      lastDisconnect,
+      receivedPendingNotifications,
+      qr,
+      isNewLogin,
+    } = update;
+
     if (
-      update.connection == "open" ||
-      update.receivedPendingNotifications == "true"
+      receivedPendingNotifications &&
+      !juna.authState?.creds?.myAppStateKeyId
     ) {
-      console.log("Connect, welcome owner!");
-      console.log(`Connected to = ` + JSON.stringify(juna.user, null, 2));
+      juna.ev.flush();
+    }
+
+    if (connection) {
+      console.log(
+        chalk.yellow.bold("【 CONNECTION 】") +
+          " -> " +
+          chalk.cyan.bold(String(connection))
+      );
+    }
+
+    // QR received (scan this with WhatsApp)
+    if (qr) {
+      try {
+        // ascii in terminal
+        console.log(
+          await QRCode.toString(qr, { type: "terminal", small: true })
+        );
+
+        // dataURL for UI
+        _qr = await QRCode.toDataURL(qr);
+        console.log(chalk.green("QR code generated (dataURL stored)."));
+      } catch (err) {
+        console.error("Gagal generate QR:", err);
+      }
+    }
+
+    // when connection closed, check reason and reconnect if appropriate
+    if (connection === "close") {
+      const statusCode = new Boom(lastDisconnect?.error)?.output?.statusCode;
+
+      switch (statusCode) {
+        case DisconnectReason.badSession:
+          console.log("File sesi rusak. Hapus folder auth dan login ulang.");
+          try {
+            fs.rmSync(session, { recursive: true, force: true });
+          } catch (e) {}
+          setTimeout(() => startJuna(), 3000);
+          break;
+        case DisconnectReason.restartRequired:
+        case DisconnectReason.connectionClosed:
+        case DisconnectReason.connectionLost:
+          console.log("Koneksi terputus, reconnecting...");
+          setTimeout(() => startJuna(), 3000);
+          break;
+        case DisconnectReason.connectionReplaced:
+          console.log(
+            "Koneksi digantikan di device lain, logout dari sini dulu."
+          );
+          await juna.logout();
+          break;
+        case DisconnectReason.loggedOut:
+          console.log("Akun di-logout. Hapus sesi dan scan ulang.");
+          try {
+            fs.rmSync(session, { recursive: true, force: true });
+          } catch (e) {}
+          setTimeout(() => startJuna(), 3000);
+          break;
+        default:
+          console.log("Terjadi error koneksi, mencoba reconnect...");
+          setTimeout(() => startJuna(), 3000);
+      }
+    }
+
+    if (connection === "open") {
+      await sleep(2500);
+
+      console.log(chalk.red.bold("【 TERHUBUNG JEI BOT V2.0 ✅ 】"));
+
+      // Set instance WhatsApp untuk callback server
+      callbackServer.setJunaInstance(juna);
+
+      // Start callback server setelah WhatsApp terhubung
+
+      // Clear QR after successful open (optional)
+      _qr = null;
     }
   });
-  store.bind(juna.ev);
 
+  // bind the store
+  // store.bind(juna.ev);
+
+  // existing event listeners (calls, messages, group updates, etc.)
   juna.ev.on("call", async (celled) => {
     let botNumber = await juna.decodeJid(juna.user.id);
     let koloi = setting.anticall;
     if (!koloi) return;
-    console.log(celled);
     for (let kopel of celled) {
       if (kopel.isGroup == false) {
         if (kopel.status == "offer") {
@@ -244,7 +282,6 @@ const startJuna = async () => {
 
   juna.ev.on("messages.upsert", async (chatUpdate) => {
     try {
-      //mek = chatUpdate.messages[0]
       for (let mek of chatUpdate.messages) {
         if (!mek.message) return;
         mek.message =
@@ -256,6 +293,10 @@ const startJuna = async () => {
           return;
         if (mek.key.id.startsWith("BAE5") && mek.key.id.length === 16) return;
         const m = smsg(juna, mek, store);
+        if (m.key.remoteJid.endsWith("@g.us")) {
+          console.log("ID grup:", m.key.remoteJid);
+        }
+
         require("./junn")(
           juna,
           m,
@@ -280,11 +321,17 @@ const startJuna = async () => {
     }
   });
 
+  // other listeners...
   juna.ev.on("group-participants.update", async (anu) => {
     const { welcome } = require("./lib/welcome");
     const iswel = _welcome.includes(anu.id);
     const isLeft = _left.includes(anu.id);
-    welcome(iswel, isLeft, juna, anu);
+    try {
+      console.log("Member masuk!");
+      welcome(iswel, isLeft, juna, anu);
+    } catch (err) {
+      console.log(err);
+    }
   });
   juna.ev.on("message.delete", async (anu) => {
     const { aDelete } = require("./lib/welcome");
@@ -314,16 +361,30 @@ const startJuna = async () => {
     }
   });
 
-  // Setting
+  // decodeJid, helpers, and many of your existing helper functions remain unchanged...
   juna.decodeJid = (jid) => {
     if (!jid) return jid;
     if (/:\d+@/gi.test(jid)) {
-      let decode = jidDecode(jid) || {};
-      return (
-        (decode.user && decode.server && decode.user + "@" + decode.server) ||
-        jid
-      );
-    } else return jid;
+      let decode = jidDecode?.(jid);
+      if (!decode || !decode.user || !decode.server) {
+        console.warn("❌ Invalid JID Decoding:", jid);
+        return jid;
+      }
+      return decode.user + "@" + decode.server;
+    }
+    return jid;
+  };
+  juna.decodeJid = (jid) => {
+    if (!jid) return jid;
+    if (/:\d+@/gi.test(jid)) {
+      let decode = jidDecode?.(jid);
+      if (!decode || !decode.user || !decode.server) {
+        console.warn("❌ Invalid JID Decoding:", jid);
+        return jid; // Kembalikan JID asli jika gagal decode
+      }
+      return decode.user + "@" + decode.server;
+    }
+    return jid;
   };
 
   juna.ev.on("contacts.update", (update) => {
@@ -1107,6 +1168,7 @@ const startJuna = async () => {
 
 startJuna();
 
+// hot-reload file watcher (kept as original)
 let file = require.resolve(__filename);
 fs.watchFile(file, () => {
   fs.unwatchFile(file);
