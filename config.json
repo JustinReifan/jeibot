@@ -1,15 +1,12 @@
 {
-  "ownerNumber": [
-    "6285931018333@s.whatsapp.net",
-    "6285931018333@s.whatsapp.net"
-  ],
+  "ownerNumber": ["6285931018333@s.whatsapp.net"],
   "ownerName": "Justin",
   "instagram": "https://linktr.ee/jeibot",
   "gcwa": "https://chat.whatsapp.com/DeUaRE4w5OKHRsp3BNG1sb",
   "website": "https://linktr.ee/jeibot",
   "gmail": "yourgmail@gmail.com",
   "botName": "Jei Bot",
-  "botVersion": "v1.0.0",
+  "botVersion": "v1.1.0",
   "footer": "2025 © 𝙹ei Bot",
   "sessionName": "session",
   "fotoDonasi": "./dana.jpg",
@@ -41,9 +38,9 @@
 
   "TINPED_API_ID": "8186",
   "TINPED_API_KEY": "p070t31U0he3DdhqY7kh6z3J6dFRFyMwk3Z",
-  "DUITKU_MERCHANT_CODE": "DS23960",
-  "DUITKU_API_KEY": "27c8319a41b290f9837cc5cb4288f106",
-  "DUITKU_PRODUCTION": false,
+  "DUITKU_MERCHANT_CODE": "D19869",
+  "DUITKU_API_KEY": "0cf493eb08d8aa010804b0a1a66dcccf",
+  "DUITKU_PRODUCTION": true,
   "APP_CALLBACK_URL": "",
   "APP_RETURN_URL": ""
 }

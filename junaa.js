@@ -13,6 +13,8 @@ const {
   jidDecode,
   proto,
   delay,
+  makeCacheableSignalKeyStore,
+  Browsers,
 } = require("@whiskeysockets/baileys");
 const pino = require("pino");
 const { Boom } = require("@hapi/boom");
@@ -25,6 +27,7 @@ const figlet = require("figlet");
 const axios = require("axios");
 const PhoneNumber = require("awesome-phonenumber");
 const callbackServer = require("./lib/callbackDuitku");
+const NodeCache = require("node-cache");
 
 // removed readline & pairing code flow imports
 // const readline = require("readline");
@@ -60,6 +63,8 @@ app.use(express.json()); // supaya req.body parsed
 
 // store latest QR as dataURL (so front-end can fetch /qr)
 let _qr = null;
+
+const msgRetryCounterCache = new NodeCache();
 
 // libs that your code uses
 const { quote } = require("./lib/quote");
@@ -115,6 +120,10 @@ const startJuna = async () => {
     contacts: {},
   };
 
+  const P = require("pino")({
+    level: "silent",
+  });
+
   const { version, isLatest } = await fetchLatestBaileysVersion();
 
   // useMultiFileAuthState untuk simpan auth ke folder session
@@ -122,7 +131,7 @@ const startJuna = async () => {
 
   juna = junaConnect({
     version,
-    logger: pino({ level: "silent" }),
+    logger: P,
     printQRInTerminal: false, // kita handle QR manual (terminal + dataURL)
     patchMessageBeforeSending: (message) => {
       const requiresPatch = !!(
@@ -145,8 +154,15 @@ const startJuna = async () => {
       }
       return message;
     },
-    browser: ["Windows", "Chrome", "Chrome 114.0.5735.198"],
-    auth: state,
+    browser:
+      Browsers.ubuntu(
+        "Chrome"
+      ) /** There are several browser options, see documentation from @whiskeysockets/baileys */,
+    auth: {
+      creds: state.creds,
+      keys: makeCacheableSignalKeyStore(state.keys, P),
+    },
+    msgRetryCounterCache,
   });
 
   // ensure normalized jid available
@@ -434,23 +450,31 @@ const startJuna = async () => {
   juna.sendContact = async (jid, kon, quoted = "", opts = {}) => {
     let list = [];
     for (let i of kon) {
+      const vcard =
+        "BEGIN:VCARD\n" +
+        "VERSION:3.0\n" +
+        "FN:" +
+        (await juna.getName(i + "@s.whatsapp.net")) +
+        "\n" +
+        "ORG:Owner Bot;\n" +
+        "TEL;type=CELL;type=VOICE;waid=" +
+        i +
+        ":+" +
+        i +
+        "\n" +
+        "END:VCARD";
       list.push({
         displayName: await juna.getName(i + "@s.whatsapp.net"),
-        vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${await juna.getName(
-          i + "@s.whatsapp.net"
-        )}\nFN:${await juna.getName(
-          i + "@s.whatsapp.net"
-        )}\nitem1.TEL;waid=${i}:${i}\nitem1.X-ABLabel:Ponsel\nitem2.EMAIL;type=INTERNET:${
-          setting.gmail
-        }\nitem2.X-ABLabel:Email\nitem3.URL:${
-          setting.website
-        }\nitem3.X-ABLabel:Instagram\nitem4.ADR:;;Indonesia;;;;\nitem4.X-ABLabel:Region\nEND:VCARD`,
+        vcard: vcard,
       });
     }
-    juna.sendMessage(
+    return juna.sendMessage(
       jid,
       {
-        contacts: { displayName: `${list.length} Kontak`, contacts: list },
+        contacts: {
+          displayName: `Owner ${setting.botName}`,
+          contacts: list,
+        },
         ...opts,
       },
       { quoted }

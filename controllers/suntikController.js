@@ -56,6 +56,7 @@ async function pricelist(api_id, api_key) {
  */
 async function orderSuntik(params) {
   const {
+    m,
     api_id,
     api_key,
     serviceId,
@@ -85,7 +86,7 @@ async function orderSuntik(params) {
   }
 
   const pricePerUnit = Number(service.price) / 1000;
-  const total = pricePerUnit * Number(qty);
+  const total = parseInt(pricePerUnit * Number(qty));
 
   //   cek apakah nominal > Rp 10000
   if (total < 1000) {
@@ -99,6 +100,7 @@ async function orderSuntik(params) {
   // 3) simpan order pending (belum kirim ke tinped sampai payment success)
   const orders = readJson(ORDERS_FILE, []);
   const orderRecord = {
+    groupId: m.chat ?? null,
     orderId,
     serviceId,
     serviceName: service.name,
@@ -121,7 +123,7 @@ async function orderSuntik(params) {
     productDetails: `${service.name} x ${qty}`,
     returnUrl,
     callbackUrl,
-    paymentMethod: "NQ",
+    paymentMethod: "SQ",
     customerVaName: buyerName,
     customerEmail: "",
   });

@@ -8241,7 +8241,7 @@
       },
       {
         "nama": "#menu",
-        "count": 3
+        "count": 4
       },
       {
         "nama": "#allmenu",
@@ -8249,7 +8249,7 @@
       },
       {
         "nama": "#addsewa",
-        "count": 16
+        "count": 28
       }
     ]
   },
@@ -8267,6 +8267,31 @@
     "db": [
       {
         "nama": "#allmenu",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "jid": "40171516993561@lid",
+    "db": [
+      {
+        "nama": "#ownermenu",
+        "count": 1
+      },
+      {
+        "nama": "#addsewa",
+        "count": 4
+      },
+      {
+        "nama": "#checksewa",
+        "count": 4
+      },
+      {
+        "nama": "#delsewa",
+        "count": 1
+      },
+      {
+        "nama": "#groupmenu",
         "count": 1
       }
     ]

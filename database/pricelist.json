@@ -108,7 +108,7 @@
     "min": 10,
     "max": 5000000,
     "description": null,
-    "average_time": null,
+    "average_time": "36 detik",
     "kategori_rekomendasi": "Tiktok Likes"
   },
   {
@@ -194,5 +194,33 @@
     "description": null,
     "average_time": null,
     "kategori_rekomendasi": "Tiktok Followers"
+  },
+  {
+    "type": "Default",
+    "service": 800,
+    "category": "Instagram Likes | Refill Guaranteed",
+    "name": "Instagram Likes | Max 500K - Refill 30 Days - HQ Account - Super Fast ♻️💧",
+    "refill": "0",
+    "cancel": 0,
+    "price": 6650,
+    "min": 50,
+    "max": 1000000,
+    "description": null,
+    "average_time": null,
+    "kategori_rekomendasi": "Instagram Likes"
+  },
+  {
+    "type": "Default",
+    "service": 801,
+    "category": "Instagram Likes | Refill Guaranteed",
+    "name": "Instagram Likes | Max 500K - Refill 90 Days - HQ Account - Super Fast ♻️💧",
+    "refill": "0",
+    "cancel": 0,
+    "price": 7388,
+    "min": 50,
+    "max": 1000000,
+    "description": null,
+    "average_time": null,
+    "kategori_rekomendasi": "Instagram Likes"
   }
 ]

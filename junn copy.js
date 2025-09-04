@@ -134,9 +134,6 @@ const { getTextSetLeft } = require("./lib/setleft");
 const afk = require("./lib/afk");
 const { sticker5 } = require("./lib/stickerr");
 
-const { resolveJid, jidToPhoneNumber } = require("./lib/utils");
-const configOwners = require("./config.json").ownerNumber;
-
 // Database
 let setiker = JSON.parse(fs.readFileSync("./database/stik.json"));
 let audionye = JSON.parse(fs.readFileSync("./database/vn.json"));
@@ -187,14 +184,6 @@ async function checkBandwidth() {
     download: format(ind),
     upload: format(out),
   };
-}
-
-function normalizeJid(jid) {
-  if (!jid) return "";
-  return (
-    jid.replace(/[^0-9]/g, "") + // ambil hanya angkanya
-    "@s.whatsapp.net"
-  ); // selalu pakai @s.whatsapp.net
 }
 
 moment.tz.setDefault("Asia/Jakarta").locale("id");
@@ -262,37 +251,48 @@ module.exports = juna = async (
     const type = Object.keys(mek.message)[0];
     if (m && type == "protocolMessage")
       juna.ev.emit("message.delete", m.message.protocolMessage.key);
-    const botNumber = normalizeJid(await juna.decodeJid(juna.user.id));
-    const ownerJids = ownerNumber.map((num) => normalizeJid(num));
+    const botNumber = await juna.decodeJid(juna.user.id);
 
-    async function isOwner(juna, senderJid, chatId, store) {
-      // resolve lid -> jid (jika bisa)
-      const realJid = await resolveJid(juna, senderJid, chatId, store);
-      const phone = jidToPhoneNumber(realJid); // e.g. "6285...."
+    // Properly decode and normalize JIDs first
+    const normalizedSender = juna.decodeJid(m.sender);
+    const normalizedBot = juna.decodeJid(botNumber);
+    const normalizedOwners = ownerNumber.map((v) =>
+      typeof v === "string" && v.includes("@")
+        ? juna.decodeJid(v)
+        : v + "@s.whatsapp.net"
+    );
 
-      // normalisasi owner list to plain digits
-      const ownerDigits = (configOwners || []).map((o) =>
-        String(o).replace(/[^0-9]/g, "")
-      );
+    // Extract clean numbers and handle special cases
+    const senderNumber = (normalizedSender.split("@")[0] || "").replace(
+      "c.us",
+      ""
+    );
+    const botNumberClean = (normalizedBot.split("@")[0] || "").replace(
+      "c.us",
+      ""
+    );
+    const ownerNumbers = normalizedOwners.map((v) =>
+      (v.split("@")[0] || "").replace("c.us", "")
+    );
 
-      return ownerDigits.includes(String(phone).replace(/[^0-9]/g, ""));
-    }
+    // Combine bot number and owner numbers, remove duplicates
+    const allOwnerNumbers = [...new Set([botNumberClean, ...ownerNumbers])];
 
-    const prefix = /^[°•π÷×¶∆£¢€¥®™✓_=|~!?#$%^&.+-,\/\\©^]/.test(body)
+    // Check if sender is in the deduplicated owners list
+    const isCreator = allOwnerNumbers.includes(senderNumber);
+
+    const prefix = /^[°•π÷×¶∆£¢€¥®™✓_=|~!?#$%^&.+-,\/\\©^]/.test(body || "")
       ? body.match(/^[°•π÷×¶∆£¢€¥®™✓_=|~!?#$%^&.+-,\/\\©^]/gi)
       : ".";
-    const isCmd = body.startsWith(prefix);
-    const command = isCmd
-      ? body.slice(1).trim().split(" ").shift().toLowerCase()
-      : "";
-
-    // const command = cekIsOwner
+    const isCmd = body ? body.startsWith(prefix) : false;
+    const command =
+      isCmd && body
+        ? body.slice(1).trim().split(" ").shift().toLowerCase()
+        : "";
+    // const command = isCreator
     //   ? body.replace(prefix, "").trim().split(/ +/).shift().toLowerCase()
     //   : isCommand;
     //const command = isCmd ? body.slice(1).trim().split(' ').shift().toLowerCase() : ''
-
-    const cekIsOwner = await isOwner(juna, m.sender, m.chat, store);
-
     const args = body.trim().split(/ +/).slice(1);
     const pushname = m.pushName || "No Name";
     const itsMe = m.sender == botNumber ? true : false;
@@ -337,10 +337,9 @@ module.exports = juna = async (
     const groupAdmins = m.isGroup ? await getGroupAdmins(participants) : "";
     const isBotAdmins = m.isGroup ? groupAdmins.includes(botNumber) : false;
     const isAdmins = m.isGroup ? groupAdmins.includes(m.sender) : false;
-
     const isUser = pendaftar.includes(m.sender);
     const isBan = user_ban.includes(m.sender);
-    const isPremium = cekIsOwner
+    const isPremium = isCreator
       ? true
       : _prem.checkPremiumUser(m.sender, premium);
     const isSewa = _sewa.checkSewaGroup(m.chat, sewa);
@@ -615,10 +614,10 @@ module.exports = juna = async (
         settingstatus = new Date() * 1;
       }
     }
-    if (!cekIsOwner && setting.grupOnly && !m.isGroup) {
+    if (!isCreator && setting.grupOnly && !m.isGroup) {
       return;
     }
-    if (!cekIsOwner && setting.japriOnly && m.isGroup) {
+    if (!isCreator && setting.japriOnly && m.isGroup) {
       return;
     }
 
@@ -834,7 +833,7 @@ module.exports = juna = async (
         if (isgclink)
           return newReply(`Gajadi, Karena kamu ngirim link group ini`);
         if (isAdmins) return newReply(`Gajadi, Kamu admin`);
-        if (cekIsOwner) return newReply(`Gajadi, Kamu ownerku`);
+        if (isCreator) return newReply(`Gajadi, Kamu ownerku`);
         await juna.sendMessage(m.chat, {
           delete: {
             remoteJid: m.chat,
@@ -853,7 +852,7 @@ module.exports = juna = async (
         );
         if (!isBotAdmins) return newReply(`Anjir lupa gw bukan admin`);
         if (isAdmins) return newReply(`Gajadi, kamu admin`);
-        if (cekIsOwner) return newReply(`Gajadi, kamu owner ku`);
+        if (isCreator) return newReply(`Gajadi, kamu owner ku`);
         await juna.sendMessage(m.chat, {
           delete: {
             remoteJid: m.chat,
@@ -872,14 +871,14 @@ module.exports = juna = async (
         await newReply(`Siap Laksanakan`);
         if (!isBotAdmins) return newReply(`Anjir lupa gw bukan admin`);
         if (isAdmins) return newReply(`Kenapa Mau Out Sayang🥺`);
-        if (cekIsOwner) return newReply(`Kenapa Mau Out Sayang🥺`);
+        if (isCreator) return newReply(`Kenapa Mau Out Sayang🥺`);
         newReply(`Done Awokwok`);
         juna.groupParticipantsUpdate(m.chat, [m.sender], "remove");
       }
     }
     // Mute
     if (m.isGroup && isMute) {
-      if (!isAdmins && !cekIsOwner) return;
+      if (!isAdmins && !isCreator) return;
     }
     // Anti Wame
     if (isAntiWame) {
@@ -890,7 +889,7 @@ module.exports = juna = async (
         if (!isBotAdmins) return newReply(`Anjir lupa gw bukan admin`);
         await juna.sendMessage(m.chat, { delete: m.key });
         if (isAdmins) return newReply(`Gajadi, Kamu admin`);
-        if (cekIsOwner) return newReply(`Gajadi, Kamu ownerku`);
+        if (isCreator) return newReply(`Gajadi, Kamu ownerku`);
         await juna.sendMessage(m.chat, {
           delete: {
             remoteJid: m.chat,
@@ -902,7 +901,7 @@ module.exports = juna = async (
         juna.groupParticipantsUpdate(m.chat, [m.sender], "remove");
       }
     }
-    if (m.isGroup && isAntiWame2 && !cekIsOwner && !isAdmins && isBotAdmins) {
+    if (m.isGroup && isAntiWame2 && !isCreator && !isAdmins && isBotAdmins) {
       if (budy.match(`wa.me`)) {
         if (!isBotAdmins) return; //newReply(`Untung bot bukan admin`)
         await juna.sendMessage(m.chat, {
@@ -1017,7 +1016,7 @@ module.exports = juna = async (
       //           botName,
       //           botVersion,
       //           runtime,
-      //           cekIsOwner,
+      //           isCreator,
       //           isPremium,
       //           prefix
       //         ),
@@ -1047,7 +1046,7 @@ module.exports = juna = async (
                 botName,
                 botVersion,
                 runtime,
-                cekIsOwner,
+                isCreator,
                 isPremium,
                 prefix
               ),
@@ -1074,7 +1073,7 @@ module.exports = juna = async (
                 botName,
                 botVersion,
                 runtime,
-                cekIsOwner,
+                isCreator,
                 isPremium,
                 prefix
               ),
@@ -1101,7 +1100,7 @@ module.exports = juna = async (
                 botName,
                 botVersion,
                 runtime,
-                cekIsOwner,
+                isCreator,
                 isPremium,
                 prefix
               ),
@@ -1128,7 +1127,7 @@ module.exports = juna = async (
                 botName,
                 botVersion,
                 runtime,
-                cekIsOwner,
+                isCreator,
                 isPremium,
                 prefix
               ),
@@ -1155,7 +1154,7 @@ module.exports = juna = async (
                 botName,
                 botVersion,
                 runtime,
-                cekIsOwner,
+                isCreator,
                 isPremium,
                 prefix
               ),
@@ -1183,7 +1182,7 @@ module.exports = juna = async (
                 botName,
                 botVersion,
                 runtime,
-                cekIsOwner,
+                isCreator,
                 isPremium,
                 prefix
               ),
@@ -1197,10 +1196,35 @@ module.exports = juna = async (
       case "owner":
       case "creator":
         {
-          await juna.sendContact(
+          // Function to convert LID to phone number format
+          // const convertLIDToPhone = (id) => {
+          //   if (id.endsWith("@lid")) {
+          //     // Convert LID format to regular phone number
+          //     // Remove @lid and add country code if needed
+          //     const num = id.split("@")[0];
+          //     if (num.startsWith("62")) return num;
+          //     if (num.startsWith("40")) return "62" + num.slice(2);
+          //     return "62" + num;
+          //   }
+          //   return id.split("@")[0]; // Handle regular phone numbers
+          // };
+
+          const ownerContacts = ownerNumber.map((id) => {
+            const phoneNumber = CONFIG.OWNER_NUMBERS;
+            return {
+              vcard: `BEGIN:VCARD\nVERSION:3.0\nFN:${ownerName}\nTEL;type=CELL;type=VOICE;waid=${phoneNumber}:+${phoneNumber}\nEND:VCARD`,
+            };
+          });
+
+          await juna.sendMessage(
             m.chat,
-            ownerNumber.map((i) => i.split("@")[0]),
-            m
+            {
+              contacts: {
+                displayName: `${ownerContacts.length} Contact`,
+                contacts: ownerContacts,
+              },
+            },
+            { quoted: m }
           );
         }
         break;
@@ -1222,7 +1246,7 @@ module.exports = juna = async (
             `Kamu bukan user premium, kirim perintah *${prefix}daftarprem* untuk membeli premium`
           );
         addCountCmd("#cekpremium", m.sender, _cmd);
-        if (cekIsOwner) return newReply(`Khusus user aja bkn untuk owner`);
+        if (isCreator) return newReply(`Khusus user aja bkn untuk owner`);
         if (_prem.getPremiumExpired(m.sender, premium) == "PERMANENT")
           return newReply(`PERMANENT`);
         let cekvip = ms(
@@ -2341,7 +2365,7 @@ _Please wait, the audio file is being sent..._`;
       case "welcome":
         if (isBan) return newReply("Lu di ban kocak awokwok");
         if (!m.isGroup) return newReply("Fitur Khusus Group!");
-        if (!isAdmins && !cekIsOwner) return newReply("Fitur Khusus admin!");
+        if (!isAdmins && !isCreator) return newReply("Fitur Khusus admin!");
         if (args[0] === "on") {
           addCountCmd("#welcome", m.sender, _cmd);
           if (isWelcome) return newReply(`Udah on`);
@@ -2373,7 +2397,7 @@ _Please wait, the audio file is being sent..._`;
       case "goodbye":
         if (isBan) return newReply("Lu di ban kocak awokwok");
         if (!m.isGroup) return newReply("Fitur Khusus Group!");
-        if (!isAdmins && !cekIsOwner) return newReply("Fitur Khusus admin!");
+        if (!isAdmins && !isCreator) return newReply("Fitur Khusus admin!");
         if (args[0] === "on") {
           addCountCmd("#left", m.sender, _cmd);
           if (isLeft) return newReply(`Udah on`);
@@ -2404,7 +2428,7 @@ _Please wait, the audio file is being sent..._`;
       case "setwelcome":
         if (isBan) return newReply("Lu di ban kocak awokwok");
         if (!m.isGroup) return newReply("Fitur Khusus Group!");
-        if (!cekIsOwner && !isAdmins) return newReply("Fitur Khusus owner!");
+        if (!isCreator && !isAdmins) return newReply("Fitur Khusus owner!");
         if (!text)
           return newReply(
             `Gunakan dengan cara ${
@@ -2422,7 +2446,7 @@ _Please wait, the audio file is being sent..._`;
       case "changewelcome":
         if (isBan) return newReply("Lu di ban kocak awokwok");
         if (!m.isGroup) return newReply("Fitur Khusus Group!");
-        if (!cekIsOwner && !isAdmins) return newReply("Fitur Khusus owner!");
+        if (!isCreator && !isAdmins) return newReply("Fitur Khusus owner!");
         if (!text)
           return newReply(
             `Gunakan dengan cara ${
@@ -2444,7 +2468,7 @@ _Please wait, the audio file is being sent..._`;
       case "delsetwelcome":
         if (isBan) return newReply("Lu di ban kocak awokwok");
         if (!m.isGroup) return newReply("Fitur Khusus Group!");
-        if (!cekIsOwner && !isAdmins) return newReply("Fitur Khusus owner!");
+        if (!isCreator && !isAdmins) return newReply("Fitur Khusus owner!");
         if (!isSetWelcome(m.chat, set_welcome_db))
           return newReply(`Belum ada set welcome di sini..`);
         removeSetWelcome(m.chat, set_welcome_db);
@@ -2454,7 +2478,7 @@ _Please wait, the audio file is being sent..._`;
       case "setleft":
         if (isBan) return newReply("Lu di ban kocak awokwok");
         if (!m.isGroup) return newReply("Fitur Khusus Group!");
-        if (!cekIsOwner && !isAdmins) return newReply("Fitur Khusus owner!");
+        if (!isCreator && !isAdmins) return newReply("Fitur Khusus owner!");
         if (!text)
           return newReply(
             `Gunakan dengan cara ${
@@ -2472,7 +2496,7 @@ _Please wait, the audio file is being sent..._`;
       case "changeleft":
         if (isBan) return newReply("Lu di ban kocak awokwok");
         if (!m.isGroup) return newReply("Fitur Khusus Group!");
-        if (!cekIsOwner && !isAdmins) return newReply("Fitur Khusus owner!");
+        if (!isCreator && !isAdmins) return newReply("Fitur Khusus owner!");
         if (!text)
           return newReply(
             `Gunakan dengan cara ${
@@ -2494,7 +2518,7 @@ _Please wait, the audio file is being sent..._`;
       case "delsetleft":
         if (isBan) return newReply("Lu di ban kocak awokwok");
         if (!m.isGroup) return newReply("Fitur Khusus Group!");
-        if (!cekIsOwner && !isAdmins) return newReply("Fitur Khusus owner!");
+        if (!isCreator && !isAdmins) return newReply("Fitur Khusus owner!");
         if (!isSetLeft(m.chat, set_left_db))
           return newReply(`Belum ada set left di sini..`);
         addCountCmd("#delsetleft", m.sender, _cmd);
@@ -2520,7 +2544,7 @@ _Please wait, the audio file is being sent..._`;
       case "pppanjang":
       case "setppbot2":
         {
-          if (!cekIsOwner) return newReply("Fitur Khusus owner!");
+          if (!isCreator) return newReply("Fitur Khusus owner!");
           if (!quoted)
             return newReply(`Reply foto dgn caption ${prefix + command}`);
           if (!/image/.test(mime))
@@ -2655,7 +2679,7 @@ _Please wait, the audio file is being sent..._`;
         {
           if (isBan) return newReply("Lu di ban kocak awokwok");
           if (!m.isGroup) return newReply("Fitur Khusus Group!");
-          if (!isAdmins && !cekIsOwner) return newReply("Fitur Khusus admin!");
+          if (!isAdmins && !isCreator) return newReply("Fitur Khusus admin!");
           if (args[0] === "on") {
             addCountCmd("#autoaigrup", m.sender, _cmd);
             if (isAutoAiGc) return newReply(`Udah aktif`);
@@ -2687,7 +2711,7 @@ _Please wait, the audio file is being sent..._`;
       case "autodlgc":
         {
           if (!m.isGroup) return newReply("Fitur Khusus Group!");
-          if (!isAdmins && !cekIsOwner) return newReply("Fitur Khusus admin!");
+          if (!isAdmins && !isCreator) return newReply("Fitur Khusus admin!");
           if (args[0] === "on") {
             addCountCmd("#autodlgc", m.sender, _cmd);
             if (isAutoDlGc) return newReply(`Udah aktif`);
@@ -2721,7 +2745,7 @@ _Please wait, the audio file is being sent..._`;
         {
           if (isBan) return newReply("Lu di ban kocak awokwok");
           if (!m.isGroup) return newReply("Fitur Khusus Group!");
-          if (!isAdmins && !cekIsOwner) return newReply("Fitur Khusus admin!");
+          if (!isAdmins && !isCreator) return newReply("Fitur Khusus admin!");
           if (!isBotAdmins) return newReply(mess.BotAdmin);
           if (args[0] === "on") {
             addCountCmd("#antilink", m.sender, _cmd);
@@ -2755,7 +2779,7 @@ _Please wait, the audio file is being sent..._`;
         {
           if (isBan) return newReply("Lu di ban kocak awokwok");
           if (!m.isGroup) return newReply("Fitur Khusus Group!");
-          if (!isAdmins && !cekIsOwner) return newReply("Fitur Khusus admin!");
+          if (!isAdmins && !isCreator) return newReply("Fitur Khusus admin!");
           if (!isBotAdmins) return newReply(mess.BotAdmin);
           if (args[0] === "on") {
             addCountCmd("#antilink2", m.sender, _cmd);
@@ -2823,7 +2847,7 @@ _Please wait, the audio file is being sent..._`;
         {
           if (isBan) return newReply("Lu di ban kocak awokwok");
           if (!m.isGroup) return newReply("Fitur Khusus Group!");
-          if (!isAdmins && !cekIsOwner) return newReply("Fitur Khusus admin!");
+          if (!isAdmins && !isCreator) return newReply("Fitur Khusus admin!");
           if (args[0] === "on") {
             addCountCmd("#mute", m.sender, _cmd);
             if (isMute) return newReply(`Udah Mute`);
@@ -2855,7 +2879,7 @@ _Please wait, the audio file is being sent..._`;
       case "antidelete":
         {
           // if (!m.isGroup) return newReply('Fitur Khusus Group!')
-          if (!cekIsOwner) return newReply("Fitur Khusus owner!");
+          if (!isCreator) return newReply("Fitur Khusus owner!");
           //if (!isBotAdmins) return newReply(mess.BotAdmin)
           if (args[0] === "on") {
             addCountCmd("#antidelete", m.sender, _cmd);
@@ -2881,7 +2905,7 @@ _Please wait, the audio file is being sent..._`;
       case "antiviewonce":
         {
           // if (!m.isGroup) return newReply('Fitur Khusus Group!')
-          if (!cekIsOwner) return newReply("Fitur Khusus owner!");
+          if (!isCreator) return newReply("Fitur Khusus owner!");
           // if (!isBotAdmins) return newReply(mess.BotAdmin)
           if (args[0] === "on") {
             addCountCmd("#antionce", m.sender, _cmd);
@@ -2974,7 +2998,7 @@ _Please wait, the audio file is being sent..._`;
         {
           if (isBan) return newReply("Lu di ban kocak awokwok");
           if (!m.isGroup) return newReply("Fitur Khusus Group!");
-          if (!isAdmins && !cekIsOwner) return newReply("Lu Siapa Kocak");
+          if (!isAdmins && !isCreator) return newReply("Lu Siapa Kocak");
           if (!isBotAdmins) return newReply(mess.BotAdmin);
           if (args[1] == "detik") {
             var timer = args[0] * `1000`;
@@ -3017,7 +3041,7 @@ _Please wait, the audio file is being sent..._`;
         {
           if (isBan) return newReply("Lu di ban kocak awokwok");
           if (!m.isGroup) return newReply("Fitur Khusus Group!");
-          if (!cekIsOwner) return newReply("Fitur Khusus owner!");
+          if (!isCreator) return newReply("Fitur Khusus owner!");
           if (!text)
             return newReply(
               `Gunakan dengan cara ${
@@ -3037,7 +3061,7 @@ _Please wait, the audio file is being sent..._`;
       case "changesetopen":
         if (isBan) return newReply("Lu di ban kocak awokwok");
         if (!m.isGroup) return newReply("Fitur Khusus Group!");
-        if (!cekIsOwner) return newReply("Fitur Khusus owner!");
+        if (!isCreator) return newReply("Fitur Khusus owner!");
         if (!text)
           return newReply(
             `Gunakan dengan cara ${
@@ -3059,7 +3083,7 @@ _Please wait, the audio file is being sent..._`;
       case "delsetopen":
         if (isBan) return newReply("Lu di ban kocak awokwok");
         if (!m.isGroup) return newReply("Fitur Khusus Group!");
-        if (!cekIsOwner) return newReply("Fitur Khusus owner!");
+        if (!isCreator) return newReply("Fitur Khusus owner!");
         if (!isSetOpen(m.chat, set_open))
           return newReply(`Belum ada set open di sini..`);
         removeSetOpen(m.chat, set_open);
@@ -3070,7 +3094,7 @@ _Please wait, the audio file is being sent..._`;
         {
           if (isBan) return newReply("Lu di ban kocak awokwok");
           if (!m.isGroup) return newReply("Fitur Khusus Group!");
-          if (!isAdmins && !cekIsOwner) return newReply("Lu Siapa Kocak");
+          if (!isAdmins && !isCreator) return newReply("Lu Siapa Kocak");
           if (!isBotAdmins) return newReply(mess.BotAdmin);
           if (args[1] == "detik") {
             var timer = args[0] * `1000`;
@@ -3112,7 +3136,7 @@ _Please wait, the audio file is being sent..._`;
         {
           if (isBan) return newReply("Lu di ban kocak awokwok");
           if (!m.isGroup) return newReply("Fitur Khusus Group!");
-          if (!cekIsOwner) return newReply("Fitur Khusus owner!");
+          if (!isCreator) return newReply("Fitur Khusus owner!");
           if (!text)
             return newReply(
               `Gunakan dengan cara ${
@@ -3132,7 +3156,7 @@ _Please wait, the audio file is being sent..._`;
       case "changesetclose":
         if (isBan) return newReply("Lu di ban kocak awokwok");
         if (!m.isGroup) return newReply("Fitur Khusus Group!");
-        if (!cekIsOwner) return newReply("Fitur Khusus owner!");
+        if (!isCreator) return newReply("Fitur Khusus owner!");
         if (!text)
           return newReply(
             `Gunakan dengan cara ${
@@ -3154,7 +3178,7 @@ _Please wait, the audio file is being sent..._`;
       case "delsetclose":
         if (isBan) return newReply("Lu di ban kocak awokwok");
         if (!m.isGroup) return newReply("Fitur Khusus Group!");
-        if (!cekIsOwner) return newReply("Fitur Khusus owner!");
+        if (!isCreator) return newReply("Fitur Khusus owner!");
         if (!isSetClose(m.chat, set_close))
           return newReply(`Belum ada set close di sini..`);
         removeSetClose(m.chat, set_close);
@@ -3165,7 +3189,7 @@ _Please wait, the audio file is being sent..._`;
         {
           if (isBan) return newReply("Lu di ban kocak awokwok");
           if (!m.isGroup) return newReply("Fitur Khusus Group!");
-          if (!cekIsOwner && !isAdmins) return newReply("Fitur Khusus admin!");
+          if (!isCreator && !isAdmins) return newReply("Fitur Khusus admin!");
           if (!isBotAdmins) return newReply(mess.BotAdmin);
           let users = m.mentionedJid[0]
             ? m.mentionedJid[0]
@@ -3184,7 +3208,7 @@ _Please wait, the audio file is being sent..._`;
         {
           if (isBan) return newReply("Lu di ban kocak awokwok");
           if (!m.isGroup) return newReply("Fitur Khusus Group!");
-          if (!cekIsOwner && !isAdmins) return newReply("Fitur Khusus admin!");
+          if (!isCreator && !isAdmins) return newReply("Fitur Khusus admin!");
           if (!isBotAdmins) return newReply(mess.BotAdmin);
           let users = m.quoted
             ? m.quoted.sender
@@ -3202,7 +3226,7 @@ _Please wait, the audio file is being sent..._`;
         {
           if (isBan) return newReply("Lu di ban kocak awokwok");
           if (!m.isGroup) return newReply("Fitur Khusus Group!");
-          if (!cekIsOwner && !isAdmins) return newReply("Fitur Khusus admin!");
+          if (!isCreator && !isAdmins) return newReply("Fitur Khusus admin!");
           if (!isBotAdmins) return newReply(mess.BotAdmin);
           let users = m.mentionedJid[0]
             ? m.mentionedJid[0]
@@ -3220,7 +3244,7 @@ _Please wait, the audio file is being sent..._`;
         {
           if (isBan) return newReply("Lu di ban kocak awokwok");
           if (!m.isGroup) return newReply("Fitur Khusus Group!");
-          if (!cekIsOwner && !isAdmins) return newReply("Fitur Khusus admin!");
+          if (!isCreator && !isAdmins) return newReply("Fitur Khusus admin!");
           if (!isBotAdmins) return newReply(mess.BotAdmin);
           let users = m.mentionedJid[0]
             ? m.mentionedJid[0]
@@ -3250,7 +3274,7 @@ _Please wait, the audio file is being sent..._`;
         {
           if (isBan) return newReply("Lu di ban kocak awokwok");
           if (!m.isGroup) return newReply("Fitur Khusus Group!");
-          if (!isAdmins && !cekIsOwner) return newReply("Lu Siapa?");
+          if (!isAdmins && !isCreator) return newReply("Lu Siapa?");
           if (!isBotAdmins) return newReply("Bot Harus Jad Admin!");
           let teks = `*👥 Tag All By Admin*
  
@@ -3275,7 +3299,7 @@ _Please wait, the audio file is being sent..._`;
         {
           if (isBan) return newReply("Lu di ban kocak awokwok");
           if (!m.isGroup) return newReply("Fitur Khusus Group!");
-          if (!isAdmins && !cekIsOwner) return newReply("Lu siapa kocak?");
+          if (!isAdmins && !isCreator) return newReply("Lu siapa kocak?");
           juna.sendMessage(
             m.chat,
             { text: q ? q : "", mentions: participants.map((a) => a.id) },
@@ -3289,7 +3313,7 @@ _Please wait, the audio file is being sent..._`;
         {
           if (isBan) return newReply("Lu di ban kocak awokwok");
           if (!m.quoted) throw false;
-          if (!isAdmins && !cekIsOwner) return newReply("Fitur Khusus admin!");
+          if (!isAdmins && !isCreator) return newReply("Fitur Khusus admin!");
           if (!isBotAdmins) return newReply(mess.BotAdmin);
           let users = m.mentionedJid[0]
             ? m.mentionedJid[0]
@@ -3424,7 +3448,7 @@ _Please wait, the audio file is being sent..._`;
       // Owners Menu
       case "listgc":
         {
-          if (!cekIsOwner) return newReply("Lu Siapa Kocak?");
+          if (!isCreator) return newReply("Lu Siapa Kocak?");
           let anulistg = await store.chats
             .all()
             .filter((v) => v.id.endsWith("@g.us"))
@@ -3450,7 +3474,7 @@ Total: ${anulistg.length} Group\n\n`;
         break;
       case "creategc":
         {
-          if (!cekIsOwner) return newReply("Lu Siapa Kocak?");
+          if (!isCreator) return newReply("Lu Siapa Kocak?");
           if (!args.join(" ")) return newReply(`Masukkan nama grup`);
           let cret = await juna.groupCreate(args.join(" "), []);
           let response = await juna.groupInviteCode(cret.id);
@@ -3479,7 +3503,7 @@ https://chat.whatsapp.com/${response}
       case "joingc":
       case "join":
         {
-          if (!cekIsOwner)
+          if (!isCreator)
             return newReply(
               `Mau sewa bot buat jaga gc? silahkan hubungi owner`
             );
@@ -3497,7 +3521,7 @@ https://chat.whatsapp.com/${response}
         break;
       case "leavegc":
         {
-          if (!cekIsOwner) return newReply(mess.OnlyOwner);
+          if (!isCreator) return newReply(mess.OnlyOwner);
           await juna
             .groupLeave(m.chat)
             .then((res) => newReply(jsonformat(res)))
@@ -3506,14 +3530,14 @@ https://chat.whatsapp.com/${response}
         break;
       case "public":
         {
-          if (!cekIsOwner) return newReply(mess.OnlyOwner);
+          if (!isCreator) return newReply(mess.OnlyOwner);
           juna.public = true;
           newReply("Sukses Change To Public Mode");
         }
         break;
       case "self":
         {
-          if (!cekIsOwner) return newReply(mess.OnlyOwner);
+          if (!isCreator) return newReply(mess.OnlyOwner);
           juna.public = false;
           newReply("Sukses Change To Self Mode");
         }
@@ -3521,7 +3545,7 @@ https://chat.whatsapp.com/${response}
       case "banuser":
       case "banneduser":
         {
-          if (!cekIsOwner) return newReply("Khusus Owner");
+          if (!isCreator) return newReply("Khusus Owner");
           let who;
           try {
             if (m.isGroup)
@@ -3547,7 +3571,7 @@ https://chat.whatsapp.com/${response}
       case "unbanneduser":
       case "unbanuser":
         {
-          if (!cekIsOwner) return newReply("Khusus Owner!");
+          if (!isCreator) return newReply("Khusus Owner!");
           let whe;
           try {
             if (m.isGroup)
@@ -3592,7 +3616,7 @@ https://chat.whatsapp.com/${response}
         break;
       case "block":
       case "blok":
-        if (!cekIsOwner) return newReply(mess.OnlyOwner);
+        if (!isCreator) return newReply(mess.OnlyOwner);
         if (!text) return newReply(`Masukkan nomor target!`);
         let blok = q.replace(/[^0-9]/g, "") + "@s.whatsapp.net";
         juna.updateBlockStatus(blok, "block");
@@ -3600,7 +3624,7 @@ https://chat.whatsapp.com/${response}
         break;
       case "unblock":
       case "unblok":
-        if (!cekIsOwner) return newReply(mess.OnlyOwner);
+        if (!isCreator) return newReply(mess.OnlyOwner);
         if (!text) return newReply(`Masukkan nomor target!`);
         let unblok = q.replace(/[^0-9]/g, "") + "@s.whatsapp.net";
         juna.updateBlockStatus(unblok, "unblock");
@@ -3620,7 +3644,7 @@ https://chat.whatsapp.com/${response}
         );
         break;
       case "sampah":
-        if (!cekIsOwner) return newReply(mess.OnlyOwner);
+        if (!isCreator) return newReply(mess.OnlyOwner);
         let all = await fs.readdirSync("./sampah");
         var teks = `JUMLAH SAMPAH SYSTEM\n\n`;
         teks += `Total : ${
@@ -3656,7 +3680,7 @@ https://chat.whatsapp.com/${response}
         break;
       case "delsampah":
         {
-          if (!cekIsOwner) return newReply(mess.OnlyOwner);
+          if (!isCreator) return newReply(mess.OnlyOwner);
           let directoryPath = path.join("./sampah"); //&& './media') //path.join();
           fs.readdir(directoryPath, async function (err, files) {
             if (err) {
@@ -3690,7 +3714,7 @@ https://chat.whatsapp.com/${response}
         }
         break;
       case "sampah2":
-        if (!cekIsOwner) return newReply(mess.OnlyOwner);
+        if (!isCreator) return newReply(mess.OnlyOwner);
         let fl = await fs.readdirSync("./");
         var teks = `JUMLAH SAMPAH SYSTEM\n\n`;
         teks += `Total : ${
@@ -3704,7 +3728,7 @@ https://chat.whatsapp.com/${response}
         break;
       case "delsampah2":
         {
-          if (!cekIsOwner) return newReply(mess.OnlyOwner);
+          if (!isCreator) return newReply(mess.OnlyOwner);
           let directoryPath = path.join("./"); //&& './media') //path.join();
           fs.readdir(directoryPath, async function (err, files) {
             if (err) {
@@ -3731,7 +3755,7 @@ https://chat.whatsapp.com/${response}
         break;
       case "setppbot":
         {
-          if (!cekIsOwner) return newReply(mess.OnlyOwner);
+          if (!isCreator) return newReply(mess.OnlyOwner);
           if (!quoted)
             return newReply(
               `Kirim/Reply Image Dengan Caption ${prefix + command}`
@@ -3753,7 +3777,7 @@ https://chat.whatsapp.com/${response}
         break;
       case "autobio":
         {
-          if (!cekIsOwner) return newReply(mess.OnlyOwner);
+          if (!isCreator) return newReply(mess.OnlyOwner);
           if (args[0] === "on") {
             if (setting.autobio === true) return newReply("Udh on");
             setting.autobio = true;
@@ -3773,7 +3797,7 @@ https://chat.whatsapp.com/${response}
         break;
       case "anticall":
         {
-          if (!cekIsOwner) return newReply(mess.OnlyOwner);
+          if (!isCreator) return newReply(mess.OnlyOwner);
           if (args[0] === "on") {
             if (setting.anticall === true) return newReply("Udh on");
             setting.anticall = true;
@@ -3793,7 +3817,7 @@ https://chat.whatsapp.com/${response}
         break;
       case "autorespond":
         {
-          if (!cekIsOwner) return newReply(mess.OnlyOwner);
+          if (!isCreator) return newReply(mess.OnlyOwner);
           if (args[0] === "on") {
             if (setting.autorespond === true) return newReply("Udh on");
             setting.autorespond = true;
@@ -3814,7 +3838,7 @@ https://chat.whatsapp.com/${response}
       case "autoblok":
       case "autoblok212":
         {
-          if (!cekIsOwner) return newReply(mess.OnlyOwner);
+          if (!isCreator) return newReply(mess.OnlyOwner);
           if (args[0] === "on") {
             if (setting.autoblok212 === true) return newReply("Udh on");
             setting.autoblok212 = true;
@@ -3834,7 +3858,7 @@ https://chat.whatsapp.com/${response}
         break;
       case "autoread":
         {
-          if (!cekIsOwner) return newReply(mess.OnlyOwner);
+          if (!isCreator) return newReply(mess.OnlyOwner);
           if (args[0] === "on") {
             if (setting.autoread === true) return newReply("Udh on");
             setting.autoread = true;
@@ -3853,7 +3877,7 @@ https://chat.whatsapp.com/${response}
         }
         break;
       case "delchat":
-        if (!cekIsOwner) return newReply(mess.OnlyOwner);
+        if (!isCreator) return newReply(mess.OnlyOwner);
         var teks = q ? q : m.chat;
         await juna.chatModify(
           {
@@ -3868,7 +3892,7 @@ https://chat.whatsapp.com/${response}
         break;
       case "bcsewa":
         {
-          if (!cekIsOwner) return newReply(mess.OnlyOwner);
+          if (!isCreator) return newReply(mess.OnlyOwner);
           if (!text) return newReply(`Example : ${prefix + command} Tes`);
           addCountCmd("#bcsewa", m.sender, _cmd);
           for (let i of sewa) {
@@ -3881,7 +3905,7 @@ https://chat.whatsapp.com/${response}
       case "bcimage":
       case "bcimg":
         {
-          if (!cekIsOwner) return newReply(mess.OnlyOwner);
+          if (!isCreator) return newReply(mess.OnlyOwner);
           if (!text)
             return newReply(
               `Reply foto dengan caption ${prefix + command} Tes`
@@ -3907,7 +3931,7 @@ https://chat.whatsapp.com/${response}
       case "bcvideo":
       case "bcvid":
         {
-          if (!cekIsOwner) return newReply(mess.OnlyOwner);
+          if (!isCreator) return newReply(mess.OnlyOwner);
           if (!text)
             return newReply(
               `Reply video dengan caption ${prefix + command} Tes`
@@ -3938,7 +3962,7 @@ https://chat.whatsapp.com/${response}
       case "bcaudio":
       case "bcaud":
         {
-          if (!cekIsOwner) return newReply(mess.OnlyOwner);
+          if (!isCreator) return newReply(mess.OnlyOwner);
           if (!/audio/.test(mime))
             return newReply(
               `Reply audio dengan caption ${prefix + command} Tes`
@@ -3964,7 +3988,7 @@ https://chat.whatsapp.com/${response}
         break;
       case "bcvn":
         {
-          if (!cekIsOwner) return newReply(mess.OnlyOwner);
+          if (!isCreator) return newReply(mess.OnlyOwner);
           if (!/audio/.test(mime))
             return newReply(
               `Reply audio dengan caption ${prefix + command} Tes`
@@ -3992,7 +4016,7 @@ https://chat.whatsapp.com/${response}
       case "bcstik":
       case "bcsticker":
         {
-          if (!cekIsOwner) return newReply(mess.OnlyOwner);
+          if (!isCreator) return newReply(mess.OnlyOwner);
           if (!/webp/.test(mime))
             return newReply(`Reply stiker dengan caption ${prefix + command}`);
           let anu = await store.chats.all().map((v) => v.id);
@@ -4012,7 +4036,7 @@ https://chat.whatsapp.com/${response}
       case "bc":
       case "broadcast":
         {
-          if (!cekIsOwner) return newReply(mess.OnlyOwner);
+          if (!isCreator) return newReply(mess.OnlyOwner);
           if (!text) return newReply(`Example : ${prefix + command} Tes`);
           let anu = await store.chats.all().map((v) => v.id);
           let todd = await juna.reSize(`${setting.pathimg}`, 300, 300);
@@ -4035,7 +4059,7 @@ https://chat.whatsapp.com/${response}
         break;
       case "addprem":
         {
-          if (!cekIsOwner) return newReply(mess.OnlyOwner);
+          if (!isCreator) return newReply(mess.OnlyOwner);
           const swn = args.join(" ");
           const pcknm = swn.split("|")[0];
           const atnm = swn.split("|")[1];
@@ -4074,7 +4098,7 @@ https://chat.whatsapp.com/${response}
         }
         break;
       case "delprem":
-        if (!cekIsOwner) return newReply(mess.OnlyOwner);
+        if (!isCreator) return newReply(mess.OnlyOwner);
         if (!args[0])
           return newReply(
             `Penggunaan :\n*${prefix}delprem* @tag\n*${prefix}delprem* nomor`
@@ -4101,7 +4125,7 @@ https://chat.whatsapp.com/${response}
         }
         break;
       case "addsewa":
-        if (!cekIsOwner) return newReply(mess.OnlyOwner);
+        if (!isCreator) return newReply(mess.OnlyOwner);
         if (!text || !args[1])
           return newReply(
             `Gunakan dengan cara ${
@@ -4121,6 +4145,15 @@ https://chat.whatsapp.com/${response}
             .replace("chat.whatsapp.com/", "")
             .split("?")[0] // Remove everything after ? character
             .trim();
+
+          // Debug logs
+          console.log("Debug addsewa:", {
+            originalUrl: args[0],
+            cleanedCode: inviteCode,
+            codeLength: inviteCode.length,
+            hasWhitespace: /\s/.test(inviteCode),
+            urlEncoded: encodeURIComponent(inviteCode),
+          });
 
           // Try to join the group
           const groupId = await juna.groupAcceptInvite(inviteCode);
@@ -4143,7 +4176,7 @@ https://chat.whatsapp.com/${response}
         }
         break;
       case "delsewa":
-        if (!cekIsOwner) return newReply(mess.OnlyOwner);
+        if (!isCreator) return newReply(mess.OnlyOwner);
         if (!m.isGroup)
           return newReply(
             `Perintah ini hanya bisa dilakukan di Grup yang menyewa bot`
@@ -4156,7 +4189,7 @@ https://chat.whatsapp.com/${response}
         break;
       case "addowner":
         {
-          if (!cekIsOwner) return newReply(mess.OnlyOwner);
+          if (!isCreator) return newReply(mess.OnlyOwner);
           if (!text)
             return newReply(`Gunakan dengan cara ${prefix + command} *@tag*`);
           let users = m.mentionedJid[0]
@@ -4175,7 +4208,7 @@ https://chat.whatsapp.com/${response}
         break;
       case "delowner":
         {
-          if (!cekIsOwner) return newReply(mess.OnlyOwner);
+          if (!isCreator) return newReply(mess.OnlyOwner);
           if (!text)
             return newReply(
               `Gunakan dengan cara ${prefix + command} *@tag/jid*`
@@ -4334,8 +4367,6 @@ https://chat.whatsapp.com/${response}
         }
         break;
       case "pricelist": {
-        if (!m.isGroup) return newReply("Fitur Khusus Group!");
-
         newReply("⏳ Mengambil pricelist..."); // feedback
 
         await sleep(2000);
@@ -4442,7 +4473,6 @@ https://chat.whatsapp.com/${response}
 
       case "ordersuntik":
         {
-          if (!m.isGroup) return newReply("Fitur Khusus Group!");
           if (!text)
             return newReply(
               "❌ Format salah.\n\nGunakan:\n.ordersuntik id_layanan | jumlah | target\n\nContoh:\n.ordersuntik 123 | 100 | https://instagram.com/tinped.id/"
@@ -4461,7 +4491,6 @@ https://chat.whatsapp.com/${response}
           try {
             const controller = require("./controllers/suntikController");
             const invoiceResp = await controller.orderSuntik({
-              m,
               api_id: CONFIG.TINPED_API_ID,
               api_key: CONFIG.TINPED_API_KEY,
               serviceId,
@@ -4536,7 +4565,6 @@ https://chat.whatsapp.com/${response}
         break;
 
       case "ceksuntik": {
-        if (!m.isGroup) return newReply("Fitur Khusus Group!");
         const id = text || args[0];
         if (!id) return newReply("❌ Kirim .ceksuntik (orderId)");
 
@@ -4599,7 +4627,6 @@ https://chat.whatsapp.com/${response}
       case "youtube":
       case "spotify":
       case "facebook": {
-        if (!m.isGroup) return newReply("Fitur Khusus Group!");
         // Jalankan logika yang sama seperti pricelist tapi langsung ke platform tertentu
         newReply("⏳ Mengambil pricelist " + command + "...");
 
@@ -4724,7 +4751,7 @@ https://chat.whatsapp.com/${response}
         }
 
         if (budy.startsWith("=> ")) {
-          if (!cekIsOwner) return newReply(mess.OnlyOwner);
+          if (!isCreator) return newReply(mess.OnlyOwner);
           function Return(sul) {
             sat = JSON.stringify(sul, null, 2);
             bang = util.format(sat);
@@ -4743,7 +4770,7 @@ https://chat.whatsapp.com/${response}
         }
 
         if (budy.startsWith("> ")) {
-          if (!cekIsOwner) return newReply(mess.OnlyOwner);
+          if (!isCreator) return newReply(mess.OnlyOwner);
           try {
             let evaled = await eval(budy.slice(2));
             if (typeof evaled !== "string")
@@ -4755,7 +4782,7 @@ https://chat.whatsapp.com/${response}
         }
 
         if (budy.startsWith("$ ")) {
-          if (!cekIsOwner) return newReply(mess.OnlyOwner);
+          if (!isCreator) return newReply(mess.OnlyOwner);
           exec(budy.slice(2), (err, stdout) => {
             if (err) return newReply(`${err}`);
             if (stdout) return newReply(stdout);

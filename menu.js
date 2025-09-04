@@ -172,15 +172,41 @@ exports.simpleMenu = (
 
 「 *LIST MENU* 」
 ${petik}
-• ${prefix}allmenu
-• ${prefix}storemenu
-• ${prefix}groupmenu
-• ${prefix}convertmenu
-• ${prefix}downloadmenu
-• ${prefix}ownermenu
+• ${prefix}pricelist
+• ${prefix}ordersuntik
+• ${prefix}ceksuntik
+• ${prefix}owner
 
 ${botVersion}${petik}`;
 };
+
+// exports.simpleMenu = (
+//   pushname,
+//   ownerName,
+//   botName,
+//   botVersion,
+//   runtime,
+//   isCreator,
+//   isPremium,
+//   prefix
+// ) => {
+//   return `👋 Hai ${pushname !== undefined ? pushname : "Kak"}
+// 🔗 𝗦𝘁𝗮𝘁𝘂𝘀: ${isCreator ? "Owner" : isPremium ? "Premium" : "Free"}
+// 🤖 𝗕𝗼𝘁 𝗡𝗮𝗺𝗲 : ${botName}
+// 📔 𝗖𝗿𝗲𝗮𝘁𝗼𝗿 : ${ownerName}
+// ⚙️ 𝗥𝘂𝗻𝘁𝗶𝗺𝗲 : ${runtime(process.uptime())}
+
+// 「 *LIST MENU* 」
+// ${petik}
+// • ${prefix}allmenu
+// • ${prefix}storemenu
+// • ${prefix}groupmenu
+// • ${prefix}convertmenu
+// • ${prefix}downloadmenu
+// • ${prefix}ownermenu
+
+// ${botVersion}${petik}`;
+// };
 
 exports.storeMenu = (
   pushname,
